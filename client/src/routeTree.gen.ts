@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as appRouteRouteImport } from './routes/(app)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as appDashboardRouteImport } from './routes/(app)/dashboard'
+import { Route as appRestaurantsIdRouteImport } from './routes/(app)/restaurants/$id'
 
 const appRouteRoute = appRouteRouteImport.update({
   id: '/(app)',
@@ -27,27 +28,40 @@ const appDashboardRoute = appDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => appRouteRoute,
 } as any)
+const appRestaurantsIdRoute = appRestaurantsIdRouteImport.update({
+  id: '/restaurants/$id',
+  path: '/restaurants/$id',
+  getParentRoute: () => appRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof appDashboardRoute
+  '/restaurants/$id': typeof appRestaurantsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof appDashboardRoute
+  '/restaurants/$id': typeof appRestaurantsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/(app)': typeof appRouteRouteWithChildren
   '/(app)/dashboard': typeof appDashboardRoute
+  '/(app)/restaurants/$id': typeof appRestaurantsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard'
+  fullPaths: '/' | '/dashboard' | '/restaurants/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard'
-  id: '__root__' | '/' | '/(app)' | '/(app)/dashboard'
+  to: '/' | '/dashboard' | '/restaurants/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/(app)'
+    | '/(app)/dashboard'
+    | '/(app)/restaurants/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -78,15 +92,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appDashboardRouteImport
       parentRoute: typeof appRouteRoute
     }
+    '/(app)/restaurants/$id': {
+      id: '/(app)/restaurants/$id'
+      path: '/restaurants/$id'
+      fullPath: '/restaurants/$id'
+      preLoaderRoute: typeof appRestaurantsIdRouteImport
+      parentRoute: typeof appRouteRoute
+    }
   }
 }
 
 interface appRouteRouteChildren {
   appDashboardRoute: typeof appDashboardRoute
+  appRestaurantsIdRoute: typeof appRestaurantsIdRoute
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
   appDashboardRoute: appDashboardRoute,
+  appRestaurantsIdRoute: appRestaurantsIdRoute,
 }
 
 const appRouteRouteWithChildren = appRouteRoute._addFileChildren(

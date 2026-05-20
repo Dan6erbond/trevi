@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Cuisine;
+use App\Models\Team;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,6 +15,12 @@ return new class extends Migration
     {
         Schema::create('restaurants', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(Team::class)->cascadeOnDelete();
+            $table->string('name');
+            $table->string('address');
+            $table->string('menuUrl');
+            $table->enum('cuisine', Cuisine::cases());
+            $table->json('tags');
             $table->timestamps();
         });
     }

@@ -1,23 +1,11 @@
 import {
-  CheckCircle,
-  Circle,
-  ExternalLink,
-  Link,
-  MapPin,
-  MoreHorizontal,
-  Star,
-  Tag,
-  Trash2,
-  Utensils,
-} from 'lucide-react'
-import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '#/components/ui/dialog'
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +15,23 @@ import {
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
 import {
+  ExternalLink,
+  Link,
+  MapPin,
+  MoreHorizontal,
+  Plus,
+  Tag,
+  Trash2,
+  Utensils,
+} from 'lucide-react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select'
+import {
   Table,
   TableBody,
   TableCell,
@@ -34,6 +39,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table'
+import axios, { AxiosError } from 'axios'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   flexRender,
@@ -41,123 +47,31 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { useMemo, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { Badge } from '#/components/ui/badge'
-import { Button } from '#/components/ui/button'
+import { Button } from '@/components/ui/button'
 import type { ColumnDef } from '@tanstack/react-table'
-import axios from 'axios'
-import { env } from 'node:process'
+import { CuisineType } from '#/lib/types/restaurant'
+import { Errors } from '#/components/ui/errors'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import type { Restaurant } from '#/lib/types/restaurant'
+import { Spinner } from '#/components/ui/spinner'
+import { env } from '#/env'
 import { useForm } from '@tanstack/react-form'
+import { useTeamContext } from '#/contexts/team'
 import z from 'zod'
 
 export const Route = createFileRoute('/(app)/dashboard')({
   component: RouteComponent,
 })
 
-type CuisineType =
-  | 'Italian'
-  | 'Japanese'
-  | 'Mexican'
-  | 'French'
-  | 'American'
-  | 'Indian'
-  | 'Thai'
-  | 'Korean'
-  | 'Other'
-
-interface Review {
-  id: string
-  userId: string
-  userName: string
-  rating: number // 1 to 5
-  comment: string
-  createdAt: string
-}
-
-interface Coordinates {
-  lat: number
-  lng: number
-}
-
-interface Restaurant {
-  id: string
-  name: string
-  location: string
-  coordinates: Coordinates
-  menuLink?: string
-  cuisine: CuisineType
-  tags: string[] // e.g., ["Date Night", "Cozy", "Outdoor Seating"]
-  hasBeenTo: boolean
-  ratingsAverage: number | null
-  reviews: Review[]
-  createdAt: string
-}
-
-const mockRestaurants: Restaurant[] = [
-  {
-    id: '1',
-    name: 'Osteria Trévi',
-    location: '123 Via Roma, Zurich',
-    coordinates: { lat: 47.3769, lng: 8.5417 },
-    menuLink: 'https://example.com/osteria-trevi/menu',
-    cuisine: 'Italian',
-    tags: ['Date Night', 'Handmade Pasta', 'Cozy'],
-    hasBeenTo: true,
-    ratingsAverage: 4.8,
-    reviews: [
-      {
-        id: 'r1',
-        userId: 'u1',
-        userName: 'Alex',
-        rating: 5,
-        comment: 'The truffle cacio e pepe was incredible. Perfect atmosphere.',
-        createdAt: '2026-04-12T19:30:00Z',
-      },
-    ],
-    createdAt: '2026-01-15T10:00:00Z',
-  },
-  {
-    id: '2',
-    name: 'Izakaya Yuki',
-    location: '45 Langstrasse, Zurich',
-    coordinates: { lat: 47.3782, lng: 8.5296 },
-    menuLink: 'https://example.com/izakaya-yuki',
-    cuisine: 'Japanese',
-    tags: ['Street Food', 'Loud', 'Great Drinks'],
-    hasBeenTo: false,
-    ratingsAverage: null,
-    reviews: [],
-    createdAt: '2026-05-01T14:22:00Z',
-  },
-  {
-    id: '3',
-    name: 'Taco Loco',
-    location: '88 Badenerstrasse, Zurich',
-    coordinates: { lat: 47.3725, lng: 8.5123 },
-    cuisine: 'Mexican',
-    tags: ['Casual', 'Quick Bite', 'Spicy'],
-    hasBeenTo: true,
-    ratingsAverage: 4.2,
-    reviews: [
-      {
-        id: 'r2',
-        userId: 'u2',
-        userName: 'Sam',
-        rating: 4,
-        comment: 'Solid al pastor tacos, salsa has a great kick.',
-        createdAt: '2026-05-10T12:15:00Z',
-      },
-    ],
-    createdAt: '2026-02-20T11:05:00Z',
-  },
-]
-
 const restaurantSchema = z.object({
   name: z.string().min(1, 'Name is required'),
-  cuisine: z.string().optional(),
+  cuisine: z.enum(CuisineType).optional(),
   location: z.string().optional(),
-  menuLink: z.string().url('Must be a valid URL').or(z.literal('')).optional(),
+  menuLink: z.url('Must be a valid URL').or(z.literal('')).optional(),
   tags: z.string().optional(), // Entered as comma-separated text, parsed on submission
 })
 
@@ -167,23 +81,61 @@ function RouteComponent() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
+  const { activeTeam } = useTeamContext()
+
+  const { data = [] } = useQuery<Restaurant[]>({
+    queryKey: ['restaurants'],
+    queryFn: async () => {
+      const res = await axios.get(
+        `${env.VITE_SERVER_URL}/api/teams/${activeTeam!.id}/restaurants?include=team`,
+      )
+
+      return res.data.data
+    },
+    enabled: activeTeam != null,
+  })
+
   const [isCreateOpen, setIsCreateOpen] = useState(false)
 
   const createRestaurant = useMutation({
-    mutationFn: async (values: RestaurantFormValues) => {
-      const parsedTags = values.tags
-        ? values.tags
+    mutationFn: async ({
+      tags,
+      location,
+      menuLink,
+      ...values
+    }: RestaurantFormValues) => {
+      const parsedTags = tags
+        ? tags
             .split(',')
             .map((t) => t.trim())
             .filter(Boolean)
         : []
 
-      const res = await axios.post(`${env.VITE_SERVER_URL}/api/restaurants`, {
-        ...values,
-        tags: parsedTags,
-        hasBeen: false,
-      })
-      return res.data
+      try {
+        const res = await axios.post(
+          `${env.VITE_SERVER_URL}/api/teams/${activeTeam!.id}/restaurants`,
+          {
+            ...values,
+            address: location,
+            tags: parsedTags,
+            menuUrl: menuLink,
+          },
+        )
+
+        return res.data
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          if (error.response?.data.errors) {
+            form.setErrorMap({
+              onSubmit: {
+                fields: error.response.data.errors,
+              },
+            })
+          }
+        }
+
+        throw error
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['restaurants'] })
@@ -193,6 +145,7 @@ function RouteComponent() {
   })
 
   const form = useForm({
+    defaultValues: {} as RestaurantFormValues,
     validators: {
       onChange: restaurantSchema,
     },
@@ -205,14 +158,19 @@ function RouteComponent() {
   const [deletingRestaurant, setDeletingRestaurant] =
     useState<Restaurant | null>(null)
 
-  // Temporary local state for displaying row mutations visually before DB persistence is added
-  const [data, setData] = useState<Restaurant[]>(mockRestaurants)
+  const deleteRestaurant = useMutation({
+    mutationFn: async () => {
+      const res = await axios.delete(
+        `${env.VITE_SERVER_URL}/api/teams/${activeTeam!.id}/restaurants/${deletingRestaurant!.id}`,
+      )
 
-  const handleDeleteConfirm = () => {
-    if (!deletingRestaurant) return
-    setData((prev) => prev.filter((r) => r.id !== deletingRestaurant.id))
-    setDeletingRestaurant(null)
-  }
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['restaurants'] })
+      setDeletingRestaurant(null)
+    },
+  })
 
   // Column definitions tailored with icons and clean custom renderers
   const columns = useMemo<ColumnDef<Restaurant>[]>(
@@ -254,63 +212,9 @@ function RouteComponent() {
         ),
         cell: ({ row }) => (
           <span className="text-sm text-muted-foreground max-w-50 block truncate">
-            {row.original.location}
+            {row.original.address}
           </span>
         ),
-      },
-      {
-        accessorKey: 'hasBeenTo',
-        header: () => (
-          <div className="flex items-center gap-2">
-            <span>Status</span>
-          </div>
-        ),
-        cell: ({ row }) => {
-          const visited = row.original.hasBeenTo
-          return (
-            <div className="flex items-center gap-1.5 text-sm">
-              {visited ? (
-                <>
-                  <CheckCircle className="h-4 w-4 text-emerald-500" />
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                    Visited
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Circle className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Wishlist</span>
-                </>
-              )}
-            </div>
-          )
-        },
-      },
-      {
-        accessorKey: 'ratingsAverage',
-        header: () => (
-          <div className="flex items-center gap-2">
-            <Star className="h-4 w-4 text-muted-foreground" />
-            <span>Rating</span>
-          </div>
-        ),
-        cell: ({ row }) => {
-          const score = row.original.ratingsAverage
-          return (
-            <div className="flex items-center gap-1 font-medium">
-              {score ? (
-                <>
-                  <span className="text-foreground">{score.toFixed(1)}</span>
-                  <span className="text-xs text-muted-foreground">
-                    ({row.original.reviews.length})
-                  </span>
-                </>
-              ) : (
-                <span className="text-xs text-muted-foreground">—</span>
-              )}
-            </div>
-          )
-        },
       },
       {
         accessorKey: 'tags',
@@ -334,7 +238,7 @@ function RouteComponent() {
         ),
       },
       {
-        accessorKey: 'menuLink',
+        accessorKey: 'menuUrl',
         header: () => (
           <div className="flex items-center gap-2">
             <Link className="h-4 w-4 text-muted-foreground" />
@@ -342,7 +246,7 @@ function RouteComponent() {
           </div>
         ),
         cell: ({ row }) => {
-          const url = row.original.menuLink
+          const url = row.original.menuUrl
           if (!url)
             return <span className="text-xs text-muted-foreground">—</span>
           return (
@@ -405,14 +309,23 @@ function RouteComponent() {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Our Restaurants
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Tracking the spots we love and the places we can't wait to try
-          together.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Our Restaurants
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Tracking the spots we love and the places we can't wait to try
+            together.
+          </p>
+        </div>
+        <Button
+          onClick={() => setIsCreateOpen(true)}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 self-start sm:self-auto gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Add Restaurant
+        </Button>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
@@ -486,7 +399,7 @@ function RouteComponent() {
               ? This will clear it from your joint wishlist.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="mt-4 gap-2 sm:gap-0">
+          <DialogFooter className="mt-4 gap-2">
             <Button
               type="button"
               variant="ghost"
@@ -497,11 +410,163 @@ function RouteComponent() {
             <Button
               type="button"
               variant="destructive"
-              onClick={handleDeleteConfirm}
+              onClick={() => deleteRestaurant.mutateAsync()}
+              disabled={deleteRestaurant.isPending}
             >
-              Remove
+              {deleteRestaurant.isPending ? (
+                <>
+                  <Spinner data-icon="inline-start" />
+                  Removing...
+                </>
+              ) : (
+                'Remove'
+              )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="sm:max-w-125">
+          <DialogHeader>
+            <DialogTitle>Add New Restaurant</DialogTitle>
+            <DialogDescription>
+              Keep track of new culinary spots to try or save your favorites.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              form.handleSubmit()
+            }}
+            className="space-y-4"
+          >
+            {/* Restaurant Name Field */}
+            <form.Field
+              name="name"
+              validators={{
+                onChange: ({ value }) =>
+                  !value ? 'Name is required' : undefined,
+              }}
+            >
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>Name</Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="e.g., Osteria Francescana"
+                  />
+                  <Errors errors={field.state.meta.errors} />
+                </div>
+              )}
+            </form.Field>
+
+            <div className="grid grid-cols-2 gap-4">
+              {/* Cuisine Field */}
+              <form.Field name="cuisine">
+                {(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name}>Cuisine</Label>
+                    <Select
+                      value={field.state.value || ''}
+                      onValueChange={(v) =>
+                        field.handleChange(v as CuisineType)
+                      }
+                    >
+                      <SelectTrigger className="w-full max-w-48">
+                        <SelectValue placeholder="e.g., Italian, Sushi" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(CuisineType).map(([label, type]) => (
+                          <SelectItem value={type} key={type}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Errors errors={field.state.meta.errors} />
+                  </div>
+                )}
+              </form.Field>
+
+              {/* Location Field */}
+              <form.Field name="location">
+                {(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name}>Location / Neighborhood</Label>
+                    <Input
+                      id={field.name}
+                      value={field.state.value || ''}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="e.g., Zurich, Downtown"
+                    />
+                    <Errors errors={field.state.meta.errors} />
+                  </div>
+                )}
+              </form.Field>
+            </div>
+
+            {/* Menu Link Field */}
+            <form.Field name="menuLink">
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>Menu Link</Label>
+                  <Input
+                    id={field.name}
+                    type="url"
+                    value={field.state.value || ''}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="https://example.com/menu"
+                  />
+                  <Errors errors={field.state.meta.errors} />
+                </div>
+              )}
+            </form.Field>
+
+            {/* Tags Field */}
+            <form.Field name="tags">
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>Tags</Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value || ''}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="e.g., date night, outdoor seating, budget friendly"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Separate your descriptive custom labels with commas.
+                  </p>
+                </div>
+              )}
+            </form.Field>
+
+            {/* Action Triggers */}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsCreateOpen(false)
+                  form.reset()
+                }}
+              >
+                Cancel
+              </Button>
+
+              <Button type="submit" disabled={createRestaurant.isPending}>
+                {createRestaurant.isPending ? 'Saving…' : 'Save Restaurant'}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
