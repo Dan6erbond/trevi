@@ -1,0 +1,5 @@
+{
+  "terminal.integrated.env.windows": {
+    "DB_PASSWORD": "pass"
+  }
+}
