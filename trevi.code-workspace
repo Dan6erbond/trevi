@@ -1,0 +1,18 @@
+{
+  "folders": [
+    {
+      "name": "client",
+      "path": "./client"
+    },
+    {
+      "name": "server",
+      "path": "./server"
+    }
+  ],
+  "settings": {
+    "terminal.integrated.env.windows": {
+      "DB_PASSWORD": "pass"
+    },
+    "editor.formatOnSave": true
+  },
+}
