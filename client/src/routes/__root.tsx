@@ -3,14 +3,19 @@ import {
   Scripts,
   createRootRouteWithContext,
 } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanStackDevtools } from '@tanstack/react-devtools'
 
-import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
-
-import appCss from '../styles.css?url'
-
+import { AuthContextProvider } from '#/contexts/auth'
 import type { QueryClient } from '@tanstack/react-query'
+import { TanStackDevtools } from '@tanstack/react-devtools'
+import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
+import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
+import { TeamContextProvider } from '#/contexts/team'
+import { TooltipProvider } from '#/components/ui/tooltip'
+import appCss from '../styles.css?url'
+import axios from 'axios'
+
+axios.defaults.withCredentials = true
+axios.defaults.withXSRFToken = true
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -47,7 +52,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <TooltipProvider>
+          <AuthContextProvider>
+            <TeamContextProvider>{children}</TeamContextProvider>
+          </AuthContextProvider>
+        </TooltipProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
