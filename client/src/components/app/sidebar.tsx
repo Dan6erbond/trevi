@@ -16,9 +16,11 @@ import {
   LayoutDashboard,
   LogOut,
   MapPin,
+  MoreVertical,
   Plus,
   Settings,
   Sparkles,
+  User,
   Users,
   Utensils,
 } from 'lucide-react'
@@ -154,21 +156,42 @@ export function AppSidebar() {
         <div className="flex items-center justify-between gap-2 p-2">
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">{user?.name}</p>
-
             <p className="text-xs text-muted-foreground truncate">
               {user?.email}
             </p>
           </div>
 
-          <div className="flex gap-1">
-            <Button variant="ghost" size="icon">
-              <Settings className="h-4 w-4" />
-            </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
 
-            <Button variant="ghost" size="icon">
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link to="/">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link to="/">
+                  <User className="h-4 w-4 mr-2" />
+                  Profile
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onClick={() => {}}
+                className="text-red-600 focus:text-red-600"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </SidebarFooter>
 
