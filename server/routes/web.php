@@ -3,11 +3,12 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\VisitController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api')->group(function () {
     Route::prefix('auth')->group(function () {
-        Route::get('/me', [AuthController::class, 'show']);
+        Route::get('/me', [AuthController::class, 'show'])->middleware('auth:sanctum');
         Route::post('/login', [AuthController::class, 'authenticate']);
         Route::post('/register', [AuthController::class, 'register']);
     });
@@ -28,12 +29,26 @@ Route::prefix('api')->group(function () {
                     Route::get('', [RestaurantController::class, 'index'])->middleware('can:view,team');
                     Route::post('', [RestaurantController::class, 'store'])->middleware('can:view,team');
 
-                    Route::prefix('{restaurant}')->group(function () {
-                        Route::get('', [RestaurantController::class, 'show'])->middleware('can:view,restaurant');
-                        Route::patch('', [RestaurantController::class, 'update'])->middleware('can:update,restaurant');
-                        Route::put('', [RestaurantController::class, 'update'])->middleware('can:update,restaurant');
-                        Route::delete('', [RestaurantController::class, 'destroy'])->middleware('can:delete,restaurant');
-                    });
+                    Route::prefix('{restaurant}')
+                        ->scopeBindings()
+                        ->group(function () {
+                            Route::get('', [RestaurantController::class, 'show'])->middleware('can:view,restaurant');
+                            Route::patch('', [RestaurantController::class, 'update'])->middleware('can:update,restaurant');
+                            Route::put('', [RestaurantController::class, 'update'])->middleware('can:update,restaurant');
+                            Route::delete('', [RestaurantController::class, 'destroy'])->middleware('can:delete,restaurant');
+
+                            Route::prefix('visits')->group(function () {
+                                Route::get('', [VisitController::class, 'index'])->middleware('can:view,restaurant');
+                                Route::post('', [VisitController::class, 'store'])->middleware('can:view,restaurant');
+
+                                Route::prefix('{visit}')->group(function () {
+                                    Route::get('', [VisitController::class, 'show'])->middleware('can:view,visit');
+                                    Route::patch('', [VisitController::class, 'update'])->middleware('can:update,visit');
+                                    Route::put('', [VisitController::class, 'update'])->middleware('can:update,visit');
+                                    Route::delete('', [VisitController::class, 'destroy'])->middleware('can:delete,visit');
+                                });
+                            });
+                        });
                 });
             });
     });
