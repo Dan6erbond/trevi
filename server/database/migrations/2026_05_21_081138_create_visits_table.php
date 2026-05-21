@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('restaurant_id')->constrained('restaurants')->cascadeOnDelete();
             $table->string('title');
             $table->dateTimeTz('visited_at');
+            $table->decimal('cost');
+            $table->integer('party_size');
             $table->timestamps();
         });
     }

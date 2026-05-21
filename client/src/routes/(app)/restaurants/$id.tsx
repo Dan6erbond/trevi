@@ -1,5 +1,27 @@
 import {
-  Calendar,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '#/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '#/components/ui/dialog'
+import { Field, FieldGroup } from '#/components/ui/field'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '#/components/ui/popover'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import {
+  CalendarIcon,
+  ChevronDown,
   DollarSign,
   ExternalLink,
   MapPin,
@@ -7,22 +29,23 @@ import {
   Tag,
   Utensils,
 } from 'lucide-react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '#/components/ui/card'
-import { Link, createFileRoute } from '@tanstack/react-router'
 
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
-import type { Restaurant } from '#/lib/types/restaurant'
-import axios from 'axios'
-import { env } from '#/env'
-import { useQuery } from '@tanstack/react-query'
+import { Calendar } from '#/components/ui/calendar'
+import { Errors } from '#/components/ui/errors'
+import { Input } from '#/components/ui/input'
+import { Label } from '#/components/ui/label'
+import { VisitCard } from '#/components/visit/card'
 import { useTeamContext } from '#/contexts/team'
+import { env } from '#/env'
+import type { Restaurant } from '#/lib/types/restaurant'
+import { useForm } from '@tanstack/react-form'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import axios, { AxiosError } from 'axios'
+import { format, formatDistanceToNow } from 'date-fns'
+import { useState } from 'react'
+import z from 'zod'
 
 // Fetcher function using global Axios and VITE_SERVER_URL
 // Note: activeTeam needs to come from your auth/team state store.
@@ -32,7 +55,7 @@ const fetchRestaurant = async (
   restaurantId: string,
 ): Promise<Restaurant> => {
   const { data } = await axios.get(
-    `${env.VITE_SERVER_URL}/api/teams/${teamId}/restaurants/${restaurantId}`,
+    `${env.VITE_SERVER_URL}/api/teams/${teamId}/restaurants/${restaurantId}?include=visits`,
   )
   return data
 }
@@ -41,6 +64,15 @@ export const Route = createFileRoute('/(app)/restaurants/$id')({
   // Optional: Add a TanStack Router loader to kickstart the query cache early
   component: RouteComponent,
 })
+
+const visitSchema = z.object({
+  title: z.string(),
+  visitedAt: z.date(),
+  cost: z.number(),
+  partySize: z.number(),
+})
+
+type VisitFormValues = z.infer<typeof visitSchema>
 
 function RouteComponent() {
   const { id } = Route.useParams()
@@ -51,21 +83,62 @@ function RouteComponent() {
     data: restaurant,
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ['teams', activeTeam?.id, 'restaurants', id],
     queryFn: () => fetchRestaurant(activeTeam!.id, id),
     enabled: activeTeam != null,
   })
 
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center text-muted-foreground">
-        Loading restaurant details...
-      </div>
-    )
-  }
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [open, setOpen] = useState(false)
 
-  if (error || !restaurant) {
+  const createVisit = useMutation({
+    mutationFn: async (values: VisitFormValues) => {
+      try {
+        const res = await axios.post(
+          `${env.VITE_SERVER_URL}/api/restaurants/${id}/visits`,
+          values,
+        )
+
+        return res.data
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          if (error.response?.data.errors) {
+            form.setErrorMap({
+              onSubmit: {
+                fields: error.response.data.errors,
+              },
+            })
+          }
+        }
+
+        throw error
+      }
+    },
+    onSuccess: () => {
+      refetch()
+      setIsCreateOpen(false)
+      form.reset()
+    },
+  })
+
+  const form = useForm({
+    defaultValues: {
+      title: '',
+      visitedAt: new Date(),
+      cost: 0,
+      partySize: 0,
+    } satisfies VisitFormValues,
+    validators: {
+      onChange: visitSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await createVisit.mutateAsync(value)
+    },
+  })
+
+  if (error) {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-2 text-destructive">
         <p className="font-semibold">Failed to load restaurant details.</p>
@@ -75,6 +148,19 @@ function RouteComponent() {
       </div>
     )
   }
+
+  if (isLoading || !restaurant) {
+    return (
+      <div className="flex h-64 items-center justify-center text-muted-foreground">
+        Loading restaurant details...
+      </div>
+    )
+  }
+
+  const lastVisit = restaurant.visits?.reduce<Date | null>((latest, v) => {
+    const d = new Date(v.visited_at)
+    return !latest || d > latest ? d : latest
+  }, null)
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6 text-foreground">
@@ -109,7 +195,9 @@ function RouteComponent() {
               </a>
             </Button>
           )}
-          <Button size="sm">Log a Visit</Button>
+          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+            Log a Visit
+          </Button>
         </div>
       </div>
 
@@ -142,11 +230,24 @@ function RouteComponent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Last Visited</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2 weeks ago</div>
-            <p className="text-xs text-muted-foreground">October 12, 2024</p>
+            {lastVisit ? (
+              <>
+                <div className="text-2xl font-bold">
+                  {formatDistanceToNow(new Date(lastVisit), {
+                    addSuffix: true,
+                  })}
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  {format(new Date(lastVisit), 'MMMM d, yyyy')}
+                </p>
+              </>
+            ) : (
+              <div className="text-sm text-muted-foreground">Never visited</div>
+            )}
           </CardContent>
         </Card>
 
@@ -179,68 +280,9 @@ function RouteComponent() {
         <div className="md:col-span-2 space-y-4">
           <h2 className="text-xl font-semibold tracking-tight">Our Timeline</h2>
 
-          {/* Placeholder Visit Card 1 */}
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">
-                    Date Night Visit
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    • Oct 12, 2024
-                  </span>
-                </div>
-                <div className="flex items-center text-primary">
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-1 text-sm text-muted-foreground">
-              <p>
-                "The homemade pasta was amazing. We sat by the window. Best
-                tiramisu in the city so far!"
-              </p>
-              <div className="pt-2 flex gap-2">
-                <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
-                  Ordered: Cacio e Pepe
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Placeholder Visit Card 2 */}
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-foreground">
-                    Quick Lunch
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    • Sept 04, 2024
-                  </span>
-                </div>
-                <div className="flex items-center text-primary">
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  <Star className="h-3.5 w-3.5 text-muted" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              <p>
-                "A bit crowded during lunch rush, but service was speedy. Great
-                lunch special deals."
-              </p>
-            </CardContent>
-          </Card>
+          {restaurant.visits?.map((v) => (
+            <VisitCard key={v.id} visit={v} />
+          ))}
         </div>
 
         {/* Right Column: Mini Map View Placeholder */}
@@ -252,7 +294,7 @@ function RouteComponent() {
               <div className="text-center space-y-1 p-4">
                 <MapPin className="mx-auto h-8 w-8 text-muted-foreground/60" />
                 <p className="text-xs font-medium">Map View Box</p>
-                <p className="text-[11px] text-muted-foreground max-w-[200px]">
+                <p className="text-[11px] text-muted-foreground max-w-50">
                   {restaurant.address}
                 </p>
               </div>
@@ -266,6 +308,166 @@ function RouteComponent() {
           </Card>
         </div>
       </div>
+
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className="sm:max-w-125">
+          <DialogHeader>
+            <DialogTitle>Log Visit</DialogTitle>
+            <DialogDescription>
+              Keep track of the last time you visited{' '}
+              <span className="font-semibold text-foreground">
+                {restaurant.name}
+              </span>
+              .
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              form.handleSubmit()
+            }}
+            className="space-y-4"
+          >
+            <form.Field name="title">
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>Title</Label>
+
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="e.g. Sushi night, Birthday dinner"
+                  />
+
+                  <Errors errors={field.state.meta.errors} />
+                </div>
+              )}
+            </form.Field>
+
+            <form.Field name="visitedAt">
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>Visited at</Label>
+                  <FieldGroup className="max-w-xs flex-row">
+                    <Field>
+                      <Popover open={open} onOpenChange={setOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            id="date-picker-optional"
+                            className="w-32 justify-between font-normal"
+                          >
+                            {format(field.state.value, 'PPP')}
+                            <ChevronDown />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="w-auto overflow-hidden p-0"
+                          align="start"
+                        >
+                          <Calendar
+                            mode="single"
+                            selected={field.state.value}
+                            captionLayout="dropdown"
+                            defaultMonth={field.state.value}
+                            onSelect={(date) => {
+                              field.handleChange(date ?? field.state.value)
+                              setOpen(false)
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </Field>
+                    <Field className="w-32">
+                      <Input
+                        type="time"
+                        id="time-picker-optional"
+                        step="1"
+                        defaultValue="10:30:00"
+                        className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                      />
+                    </Field>
+                  </FieldGroup>
+                  <Errors errors={field.state.meta.errors} />
+                </div>
+              )}
+            </form.Field>
+
+            <form.Field name="cost">
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>Cost</Label>
+
+                  <Input
+                    id={field.name}
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    placeholder="0.00"
+                    value={field.state.value}
+                    onChange={(e) =>
+                      field.handleChange(
+                        e.target.value === ''
+                          ? field.state.value
+                          : Number(e.target.value),
+                      )
+                    }
+                  />
+
+                  <Errors errors={field.state.meta.errors} />
+                </div>
+              )}
+            </form.Field>
+
+            <form.Field name="partySize">
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>Party size</Label>
+
+                  <Input
+                    id={field.name}
+                    type="number"
+                    min={1}
+                    step={1}
+                    placeholder="2"
+                    value={field.state.value}
+                    onChange={(e) =>
+                      field.handleChange(
+                        e.target.value === ''
+                          ? field.state.value
+                          : Number(e.target.value),
+                      )
+                    }
+                  />
+
+                  <Errors errors={field.state.meta.errors} />
+                </div>
+              )}
+            </form.Field>
+
+            {/* Action Triggers */}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsCreateOpen(false)
+                  form.reset()
+                }}
+              >
+                Cancel
+              </Button>
+
+              <Button type="submit" disabled={createVisit.isPending}>
+                {createVisit.isPending ? 'Saving…' : 'Save visit'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -10,13 +10,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
 import {
+  Edit,
   ExternalLink,
-  Link,
+  LinkIcon,
   MapPin,
   MoreHorizontal,
   Plus,
@@ -24,6 +23,7 @@ import {
   Trash2,
   Utensils,
 } from 'lucide-react'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   Select,
   SelectContent,
@@ -40,7 +40,6 @@ import {
   TableRow,
 } from '#/components/ui/table'
 import axios, { AxiosError } from 'axios'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   flexRender,
   getCoreRowModel,
@@ -241,7 +240,7 @@ function RouteComponent() {
         accessorKey: 'menuUrl',
         header: () => (
           <div className="flex items-center gap-2">
-            <Link className="h-4 w-4 text-muted-foreground" />
+            <LinkIcon className="h-4 w-4 text-muted-foreground" />
             <span>Menu</span>
           </div>
         ),
@@ -263,9 +262,8 @@ function RouteComponent() {
       },
       {
         id: 'actions',
-        cell: ({ row }) => {
-          const restaurant = row.original
-          return (
+        cell: ({ row: { original: restaurant } }) => (
+          <div className="flex gap-2 items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
@@ -274,18 +272,6 @@ function RouteComponent() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() =>
-                    navigate({
-                      to: '/restaurants/$id',
-                      params: { id: restaurant.id.toString() },
-                    })
-                  }
-                >
-                  Open details
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive focus:bg-destructive/10"
                   onClick={() => setDeletingRestaurant(restaurant)}
@@ -294,8 +280,17 @@ function RouteComponent() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          )
-        },
+
+            <Button variant="outline" size="icon" asChild>
+              <Link
+                to="/restaurants/$id"
+                params={{ id: restaurant.id.toString() }}
+              >
+                <Edit />
+              </Link>
+            </Button>
+          </div>
+        ),
       },
     ],
     [navigate],

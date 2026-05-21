@@ -6,7 +6,6 @@ use App\Http\Requests\StoreRestaurantRequest;
 use App\Http\Requests\UpdateRestaurantRequest;
 use App\Models\Restaurant;
 use App\Models\Team;
-use Illuminate\Http\Request;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class RestaurantController extends Controller
@@ -16,17 +15,12 @@ class RestaurantController extends Controller
      */
     public function index(Team $team)
     {
-        return QueryBuilder::for($team->restaurants())
+        return QueryBuilder::for(
+            $team->restaurants()
+                ->withMax('visits', 'visited_at')
+        )
             ->allowedIncludes('team')
             ->jsonPaginate();
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -51,17 +45,9 @@ class RestaurantController extends Controller
      */
     public function show(Team $team, Restaurant $restaurant)
     {
-        return QueryBuilder::for(Restaurant::where('id', $restaurant->id))
+        return QueryBuilder::for(Restaurant::whereId($restaurant->id))
             ->allowedIncludes('visits')
             ->first();
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Restaurant $restaurant)
-    {
-        //
     }
 
     /**

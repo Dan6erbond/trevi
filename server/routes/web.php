@@ -36,19 +36,25 @@ Route::prefix('api')->group(function () {
                             Route::patch('', [RestaurantController::class, 'update'])->middleware('can:update,restaurant');
                             Route::put('', [RestaurantController::class, 'update'])->middleware('can:update,restaurant');
                             Route::delete('', [RestaurantController::class, 'destroy'])->middleware('can:delete,restaurant');
-
-                            Route::prefix('visits')->group(function () {
-                                Route::get('', [VisitController::class, 'index'])->middleware('can:view,restaurant');
-                                Route::post('', [VisitController::class, 'store'])->middleware('can:view,restaurant');
-
-                                Route::prefix('{visit}')->group(function () {
-                                    Route::get('', [VisitController::class, 'show'])->middleware('can:view,visit');
-                                    Route::patch('', [VisitController::class, 'update'])->middleware('can:update,visit');
-                                    Route::put('', [VisitController::class, 'update'])->middleware('can:update,visit');
-                                    Route::delete('', [VisitController::class, 'destroy'])->middleware('can:delete,visit');
-                                });
-                            });
                         });
+                });
+            });
+    });
+
+    Route::prefix('restaurants')->middleware('auth:sanctum')->group(function () {
+        Route::prefix('{restaurant}')
+            ->scopeBindings()
+            ->group(function () {
+                Route::prefix('visits')->group(function () {
+                    Route::get('', [VisitController::class, 'index'])->middleware('can:view,restaurant');
+                    Route::post('', [VisitController::class, 'store'])->middleware('can:view,restaurant');
+
+                    Route::prefix('{visit}')->group(function () {
+                        Route::get('', [VisitController::class, 'show'])->middleware('can:view,visit');
+                        Route::patch('', [VisitController::class, 'update'])->middleware('can:update,visit');
+                        Route::put('', [VisitController::class, 'update'])->middleware('can:update,visit');
+                        Route::delete('', [VisitController::class, 'destroy'])->middleware('can:delete,visit');
+                    });
                 });
             });
     });

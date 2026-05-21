@@ -1,3 +1,5 @@
+import type { Visit } from './visit'
+
 export interface Restaurant {
   id: number
   team_id: number
@@ -8,6 +10,7 @@ export interface Restaurant {
   tags: string[]
   created_at: Date
   updated_at: Date
+  visits?: Visit[]
 }
 
 export enum CuisineType {
