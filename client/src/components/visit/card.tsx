@@ -8,11 +8,12 @@ import {
 } from '#/components/ui/dialog'
 import { CreditCard, Divide, Pencil, Star, Trash2, Users } from 'lucide-react'
 
-import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Errors } from '#/components/ui/errors'
 import { Label } from '#/components/ui/label'
+import { StarRatingInput } from '#/components/ui/star-rating'
 import { Textarea } from '#/components/ui/textarea'
+import { useAuthContext } from '#/contexts/auth'
 import { env } from '#/env'
 import type { Visit } from '#/lib/types/visit'
 import { useForm } from '@tanstack/react-form'
@@ -21,8 +22,7 @@ import axios, { AxiosError } from 'axios'
 import { format } from 'date-fns'
 import { useState } from 'react'
 import z from 'zod'
-import { StarRatingInput } from '#/components/ui/star-rating'
-import { useAuthContext } from '#/contexts/auth'
+import { formatCHF } from '#/lib/utils'
 
 const reviewSchema = z.object({
   rating: z.number().min(1).max(5),
@@ -30,12 +30,6 @@ const reviewSchema = z.object({
 })
 
 type ReviewFormValues = z.infer<typeof reviewSchema>
-
-const formatCHF = (value: number) =>
-  new Intl.NumberFormat('de-CH', {
-    style: 'currency',
-    currency: 'CHF',
-  }).format(value)
 
 const formatCHFPerPerson = (cost: number, party_size: number) => {
   if (!party_size) return formatCHF(cost)

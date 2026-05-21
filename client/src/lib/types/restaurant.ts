@@ -13,6 +13,7 @@ export interface Restaurant {
   visits?: Visit[]
   visits_avg_cost?: string
   visits_avg_party_size?: string
+  visits_avg_cost_party_size?: string
   visits_max_visited_at?: string
   reviews_avg_rating?: string
 }

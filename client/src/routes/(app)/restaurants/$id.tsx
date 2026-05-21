@@ -46,6 +46,7 @@ import axios, { AxiosError } from 'axios'
 import { format, formatDistanceToNow } from 'date-fns'
 import { useState } from 'react'
 import z from 'zod'
+import { formatCHF, getDollarRating } from '#/lib/utils'
 
 // Fetcher function using global Axios and VITE_SERVER_URL
 // Note: activeTeam needs to come from your auth/team state store.
@@ -73,19 +74,6 @@ const visitSchema = z.object({
 })
 
 type VisitFormValues = z.infer<typeof visitSchema>
-
-const formatCHF = (value: number) =>
-  new Intl.NumberFormat('de-CH', {
-    style: 'currency',
-    currency: 'CHF',
-  }).format(value)
-
-const getDollarRating = (avg: number) => {
-  if (avg < 25) return '$'
-  if (avg < 50) return '$$'
-  if (avg < 90) return '$$$'
-  return '$$$$'
-}
 
 function RouteComponent() {
   const { id } = Route.useParams()
@@ -183,7 +171,9 @@ function RouteComponent() {
     ? Number(restaurant.visits_avg_party_size)
     : null
 
-  const perPerson = avgCost && avgPartySize ? avgCost / avgPartySize : null
+  const perPerson = restaurant.visits_avg_cost_party_size
+    ? Number(restaurant.visits_avg_cost_party_size)
+    : null
 
   const rating =
     (perPerson ?? avgCost) != null

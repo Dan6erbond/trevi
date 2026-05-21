@@ -6,6 +6,7 @@ use App\Http\Requests\StoreRestaurantRequest;
 use App\Http\Requests\UpdateRestaurantRequest;
 use App\Models\Restaurant;
 use App\Models\Team;
+use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class RestaurantController extends Controller
@@ -20,6 +21,7 @@ class RestaurantController extends Controller
                 ->withMax('visits', 'visited_at')
                 ->withAvg('visits', 'cost')
                 ->withAvg('visits', 'party_size')
+                ->withAvg('visits', DB::raw('cost / party_size'))
         )
             ->allowedIncludes('team')
             ->jsonPaginate();
@@ -52,6 +54,7 @@ class RestaurantController extends Controller
                 ->withMax('visits', 'visited_at')
                 ->withAvg('visits', 'cost')
                 ->withAvg('visits', 'party_size')
+                ->withAvg('visits', DB::raw('cost / party_size'))
                 ->withAvg('reviews', 'rating')
         )
             ->allowedIncludes('visits', 'visits.reviews', 'visits.reviews.author')

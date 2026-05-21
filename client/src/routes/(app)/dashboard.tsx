@@ -7,12 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu'
-import {
+  DollarSign,
   Edit,
   ExternalLink,
   LinkIcon,
@@ -23,6 +18,12 @@ import {
   Trash2,
   Utensils,
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '#/components/ui/dropdown-menu'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   Select,
@@ -45,6 +46,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table'
+import { formatCHF, getDollarRating } from '#/lib/utils'
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -182,9 +184,9 @@ function RouteComponent() {
             <span>Restaurant</span>
           </div>
         ),
-        cell: ({ row }) => (
+        cell: ({ cell }) => (
           <div className="font-semibold text-foreground">
-            {row.original.name}
+            {cell.getValue<string>()}
           </div>
         ),
       },
@@ -195,23 +197,23 @@ function RouteComponent() {
             <span>Cuisine</span>
           </div>
         ),
-        cell: ({ row }) => (
+        cell: ({ cell }) => (
           <Badge variant="secondary" className="font-normal">
-            {row.original.cuisine}
+            {cell.getValue<CuisineType>()}
           </Badge>
         ),
       },
       {
-        accessorKey: 'location',
+        accessorKey: 'address',
         header: () => (
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-muted-foreground" />
             <span>Location</span>
           </div>
         ),
-        cell: ({ row }) => (
+        cell: ({ cell }) => (
           <span className="text-sm text-muted-foreground max-w-50 block truncate">
-            {row.original.address}
+            {cell.getValue<string>()}
           </span>
         ),
       },
@@ -259,6 +261,27 @@ function RouteComponent() {
             </a>
           )
         },
+      },
+      {
+        accessorKey: 'visits_avg_cost',
+        header: () => (
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <span>Average Spend</span>
+          </div>
+        ),
+        cell: ({ cell, row }) =>
+          cell.getValue<string>() && (
+            <span className="text-sm max-w-60 block truncate">
+              {formatCHF(Number(cell.getValue<string>()))}{' '}
+              <span className="text-muted-foreground">
+                ({formatCHF(Number(row.original.visits_avg_cost_party_size))} /
+                person)
+              </span>
+              ·{' '}
+              {getDollarRating(Number(row.original.visits_avg_cost_party_size))}
+            </span>
+          ),
       },
       {
         id: 'actions',
