@@ -16,7 +16,9 @@ class VisitController extends Controller
      */
     public function index(Restaurant $restaurant)
     {
-        return QueryBuilder::for($restaurant->visits())->jsonPaginate();
+        return QueryBuilder::for($restaurant->visits())
+            ->allowedIncludes('reviews')
+            ->jsonPaginate();
     }
 
     /**
@@ -62,7 +64,7 @@ class VisitController extends Controller
      */
     public function destroy(Restaurant $restaurant, Visit $visit)
     {
-        $restaurant->delete();
+        $visit->delete();
 
         return [
             'success' => 'true'

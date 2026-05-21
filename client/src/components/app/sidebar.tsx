@@ -9,6 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -87,9 +88,6 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center justify-between">
             Teams
-            <Button variant="ghost" size="icon" className="h-6 w-6">
-              <Plus className="h-4 w-4" />
-            </Button>
           </SidebarGroupLabel>
 
           <SidebarGroupContent>
@@ -113,6 +111,13 @@ export function AppSidebar() {
                       {team.name}
                     </DropdownMenuItem>
                   ))}
+
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuItem onClick={() => setIsCreateOpen(true)}>
+                    <Plus className="h-4 w-4" />
+                    Create Team
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}

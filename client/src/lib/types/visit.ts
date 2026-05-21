@@ -1,3 +1,5 @@
+import type { Review } from './review'
+
 export interface Visit {
   restaurant_id: number
   title?: string
@@ -7,4 +9,5 @@ export interface Visit {
   updated_at: Date
   created_at: Date
   id: number
+  reviews?: Review[]
 }

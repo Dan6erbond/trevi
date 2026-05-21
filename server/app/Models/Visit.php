@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property numeric|null $cost
  * @property int|null $party_size
  * @property-read \App\Models\Restaurant $restaurant
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Review> $reviews
+ * @property-read int|null $reviews_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Visit newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Visit newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Visit query()
@@ -35,5 +38,10 @@ class Visit extends Model
     public function restaurant(): BelongsTo
     {
         return $this->belongsTo(Restaurant::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
     }
 }

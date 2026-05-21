@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '#/components/ui/dialog'
-import { Pencil, Star, Trash2 } from 'lucide-react'
+import { CreditCard, Divide, Pencil, Star, Trash2, Users } from 'lucide-react'
 
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
@@ -107,29 +107,40 @@ export function VisitCard({ visit }: { visit: Visit }) {
             </div>
 
             {/* Meta row */}
-            {(visit.cost || visit.party_size) && (
-              <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
-                {visit.party_size != null && <span>👥 {visit.party_size}</span>}
-
-                {visit.cost != null && visit.party_size != null && (
-                  <span>
-                    💰 {formatCHF(visit.cost)} ·{' '}
-                    {formatCHFPerPerson(visit.cost, visit.party_size)} / person
-                  </span>
+            {(visit.cost != null || visit.party_size != null) && (
+              <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1">
+                {visit.party_size != null && (
+                  <div className="flex items-center gap-1">
+                    <Users className="size-3.5" />
+                    <span>{visit.party_size}</span>
+                  </div>
                 )}
 
-                {visit.cost != null && visit.party_size == null && (
-                  <span>💰 {formatCHF(visit.cost)}</span>
+                {visit.cost != null && (
+                  <div className="flex items-center gap-1">
+                    <CreditCard className="size-3.5" />
+                    <span>{formatCHF(visit.cost)}</span>
+                  </div>
+                )}
+
+                {visit.cost != null && visit.party_size != null && (
+                  <div className="flex items-center gap-1">
+                    <Divide className="size-3.5" />
+                    <span>
+                      {formatCHFPerPerson(visit.cost, visit.party_size)} /
+                      person
+                    </span>
+                  </div>
                 )}
               </div>
             )}
-          </div>
 
-          {/* Rating */}
-          <div className="flex items-center text-primary">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="h-3.5 w-3.5 fill-current" />
-            ))}
+            {/* Rating */}
+            <div className="flex items-center text-primary">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star key={i} className="size-3.5 fill-current" />
+              ))}
+            </div>
           </div>
         </div>
       </CardHeader>
@@ -153,17 +164,11 @@ export function VisitCard({ visit }: { visit: Visit }) {
 
           {/* Reviews list */}
           <div className="space-y-2">
-            {([].length ?? 0) === 0 && (
+            {(visit.reviews?.length ?? 0) === 0 && (
               <p className="text-sm text-muted-foreground">No reviews yet</p>
             )}
 
-            {[
-              {
-                id: 1,
-                created_at: new Date().toISOString(),
-                text: 'Awesome food!',
-              },
-            ].map((r) => (
+            {visit.reviews?.map((r) => (
               <div
                 key={r.id}
                 className="rounded-lg border bg-muted/30 p-3 space-y-2"
@@ -179,7 +184,7 @@ export function VisitCard({ visit }: { visit: Visit }) {
                   {/* Actions */}
                   <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon" className="h-7 w-7">
-                      <Pencil className="h-3.5 w-3.5" />
+                      <Pencil className="size-3.5" />
                     </Button>
 
                     <Button
@@ -187,13 +192,13 @@ export function VisitCard({ visit }: { visit: Visit }) {
                       size="icon"
                       className="h-7 w-7 text-red-500"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="size-3.5" />
                     </Button>
                   </div>
                 </div>
 
                 {/* Review text */}
-                <p className="text-sm text-foreground">{r.text}</p>
+                <p className="text-sm text-foreground">{r.review}</p>
 
                 {/* Optional tags */}
                 <div className="flex gap-2 flex-wrap">

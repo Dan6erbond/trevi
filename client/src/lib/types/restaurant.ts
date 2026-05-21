@@ -14,6 +14,7 @@ export interface Restaurant {
   visits_avg_cost?: string
   visits_avg_party_size?: string
   visits_max_visited_at?: string
+  reviews_avg_rating?: string
 }
 
 export enum CuisineType {

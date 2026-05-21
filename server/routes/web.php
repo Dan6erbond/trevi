@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RestaurantController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\VisitController;
 use Illuminate\Support\Facades\Route;
@@ -54,6 +55,24 @@ Route::prefix('api')->group(function () {
                         Route::patch('', [VisitController::class, 'update'])->middleware('can:update,visit');
                         Route::put('', [VisitController::class, 'update'])->middleware('can:update,visit');
                         Route::delete('', [VisitController::class, 'destroy'])->middleware('can:delete,visit');
+                    });
+                });
+            });
+    });
+
+    Route::prefix('visits')->middleware('auth:sanctum')->group(function () {
+        Route::prefix('{visit}')
+            ->scopeBindings()
+            ->group(function () {
+                Route::prefix('reviews')->group(function () {
+                    Route::get('', [ReviewController::class, 'index'])->middleware('can:view,visit');
+                    Route::post('', [ReviewController::class, 'store'])->middleware('can:view,visit');
+
+                    Route::prefix('{review}')->group(function () {
+                        Route::get('', [ReviewController::class, 'show'])->middleware('can:view,visit');
+                        Route::patch('', [ReviewController::class, 'update'])->middleware('can:update,visit');
+                        Route::put('', [ReviewController::class, 'update'])->middleware('can:update,visit');
+                        Route::delete('', [ReviewController::class, 'destroy'])->middleware('can:delete,visit');
                     });
                 });
             });

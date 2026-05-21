@@ -54,4 +54,12 @@ class Restaurant extends Model
     {
         return $this->hasMany(Visit::class);
     }
+
+    public function reviews()
+    {
+        return $this->hasManyThrough(
+            Review::class,
+            Visit::class
+        );
+    }
 }

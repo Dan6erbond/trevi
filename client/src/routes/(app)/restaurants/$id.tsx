@@ -55,7 +55,7 @@ const fetchRestaurant = async (
   restaurantId: string,
 ): Promise<Restaurant> => {
   const { data } = await axios.get(
-    `${env.VITE_SERVER_URL}/api/teams/${teamId}/restaurants/${restaurantId}?include=visits`,
+    `${env.VITE_SERVER_URL}/api/teams/${teamId}/restaurants/${restaurantId}?include=visits,visits.reviews`,
   )
   return data
 }
@@ -239,8 +239,14 @@ function RouteComponent() {
             <Star className="h-4 w-4 text-primary fill-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">4.8 / 5</div>
-            <p className="text-xs text-muted-foreground">Based on 5 visits</p>
+            <div className="text-2xl font-bold">
+              {restaurant.reviews_avg_rating &&
+                Number(restaurant.reviews_avg_rating)}{' '}
+              / 5
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Based on {restaurant.visits?.length ?? 0} visits
+            </p>
           </CardContent>
         </Card>
 
