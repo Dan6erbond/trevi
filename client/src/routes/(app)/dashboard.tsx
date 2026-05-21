@@ -280,7 +280,7 @@ function RouteComponent() {
                   onClick={() =>
                     navigate({
                       to: '/restaurants/$id',
-                      params: { id: restaurant.id },
+                      params: { id: restaurant.id.toString() },
                     })
                   }
                 >
