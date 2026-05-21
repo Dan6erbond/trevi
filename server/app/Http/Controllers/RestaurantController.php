@@ -54,7 +54,7 @@ class RestaurantController extends Controller
                 ->withAvg('visits', 'party_size')
                 ->withAvg('reviews', 'rating')
         )
-            ->allowedIncludes('visits', 'visits.reviews')
+            ->allowedIncludes('visits', 'visits.reviews', 'visits.reviews.author')
             ->first();
     }
 

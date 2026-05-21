@@ -22,6 +22,7 @@ import { format } from 'date-fns'
 import { useState } from 'react'
 import z from 'zod'
 import { StarRatingInput } from '#/components/ui/star-rating'
+import { useAuthContext } from '#/contexts/auth'
 
 const reviewSchema = z.object({
   rating: z.number().min(1).max(5),
@@ -43,6 +44,8 @@ const formatCHFPerPerson = (cost: number, party_size: number) => {
 
 export function VisitCard({ visit }: { visit: Visit }) {
   const queryClient = useQueryClient()
+
+  const { user } = useAuthContext()
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
 
@@ -176,39 +179,45 @@ export function VisitCard({ visit }: { visit: Visit }) {
                 {/* Review header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">
+                      {r.author?.name ?? 'Unknown user'}
+                    </span>
+
                     <span className="text-xs text-muted-foreground">
                       {format(new Date(r.created_at), 'MMM d, yyyy')}
                     </span>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-7 w-7">
-                      <Pencil className="size-3.5" />
-                    </Button>
+                  {r.author_id === user?.id && (
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                        <Pencil className="size-3.5" />
+                      </Button>
 
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 text-red-500"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
-                  </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-red-500"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Review text */}
                 <p className="text-sm text-foreground">{r.review}</p>
 
                 {/* Optional tags */}
-                <div className="flex gap-2 flex-wrap">
+                {/* <div className="flex gap-2 flex-wrap">
                   <Badge variant="secondary" className="text-[10px] px-2 py-0">
                     Cacio e Pepe
                   </Badge>
                   <Badge variant="secondary" className="text-[10px] px-2 py-0">
                     Cozy
                   </Badge>
-                </div>
+                </div> */}
               </div>
             ))}
           </div>

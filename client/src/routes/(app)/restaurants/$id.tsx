@@ -55,7 +55,7 @@ const fetchRestaurant = async (
   restaurantId: string,
 ): Promise<Restaurant> => {
   const { data } = await axios.get(
-    `${env.VITE_SERVER_URL}/api/teams/${teamId}/restaurants/${restaurantId}?include=visits,visits.reviews`,
+    `${env.VITE_SERVER_URL}/api/teams/${teamId}/restaurants/${restaurantId}?include=visits,visits.reviews,visits.reviews.author`,
   )
   return data
 }
