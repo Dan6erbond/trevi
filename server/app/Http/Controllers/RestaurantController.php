@@ -18,6 +18,8 @@ class RestaurantController extends Controller
         return QueryBuilder::for(
             $team->restaurants()
                 ->withMax('visits', 'visited_at')
+                ->withAvg('visits', 'cost')
+                ->withAvg('visits', 'party_size')
         )
             ->allowedIncludes('team')
             ->jsonPaginate();
@@ -45,7 +47,12 @@ class RestaurantController extends Controller
      */
     public function show(Team $team, Restaurant $restaurant)
     {
-        return QueryBuilder::for(Restaurant::whereId($restaurant->id))
+        return QueryBuilder::for(
+            Restaurant::whereId($restaurant->id)
+                ->withMax('visits', 'visited_at')
+                ->withAvg('visits', 'cost')
+                ->withAvg('visits', 'party_size')
+        )
             ->allowedIncludes('visits')
             ->first();
     }

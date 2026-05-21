@@ -74,6 +74,19 @@ const visitSchema = z.object({
 
 type VisitFormValues = z.infer<typeof visitSchema>
 
+const formatCHF = (value: number) =>
+  new Intl.NumberFormat('de-CH', {
+    style: 'currency',
+    currency: 'CHF',
+  }).format(value)
+
+const getDollarRating = (avg: number) => {
+  if (avg < 25) return '$'
+  if (avg < 50) return '$$'
+  if (avg < 90) return '$$$'
+  return '$$$$'
+}
+
 function RouteComponent() {
   const { id } = Route.useParams()
 
@@ -162,6 +175,21 @@ function RouteComponent() {
     return !latest || d > latest ? d : latest
   }, null)
 
+  const avgCost = restaurant.visits_avg_cost
+    ? Number(restaurant.visits_avg_cost)
+    : null
+
+  const avgPartySize = restaurant.visits_avg_party_size
+    ? Number(restaurant.visits_avg_party_size)
+    : null
+
+  const perPerson = avgCost && avgPartySize ? avgCost / avgPartySize : null
+
+  const rating =
+    (perPerson ?? avgCost) != null
+      ? getDollarRating((perPerson ?? avgCost)!)
+      : '—'
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6 text-foreground">
       {/* Header Section */}
@@ -218,12 +246,41 @@ function RouteComponent() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Cost</CardTitle>
+            <CardTitle className="text-sm font-medium">Average Spend</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">$$</div>
-            <p className="text-xs text-muted-foreground">Mid-range dining</p>
+
+          <CardContent className="space-y-2">
+            {/* Main row */}
+            <div className="text-2xl font-bold">
+              {avgCost != null ? formatCHF(avgCost) : '—'}
+            </div>
+
+            {/* Secondary stats */}
+            <div className="text-xs text-muted-foreground space-y-1">
+              <div>
+                Per person: {perPerson != null ? formatCHF(perPerson) : '—'}
+              </div>
+
+              <div>
+                Avg party size:{' '}
+                {avgPartySize != null ? avgPartySize.toFixed(1) : '—'}
+              </div>
+            </div>
+
+            {/* Rating */}
+            <p className="text-xs text-muted-foreground">
+              {rating} ·{' '}
+              {rating === '—'
+                ? 'No data yet'
+                : rating === '$'
+                  ? 'Budget-friendly'
+                  : rating === '$$'
+                    ? 'Mid-range'
+                    : rating === '$$$'
+                      ? 'Upscale'
+                      : 'Fine dining'}
+            </p>
           </CardContent>
         </Card>
 
@@ -411,7 +468,7 @@ function RouteComponent() {
                     onChange={(e) =>
                       field.handleChange(
                         e.target.value === ''
-                          ? field.state.value
+                          ? ('' as unknown as number)
                           : Number(e.target.value),
                       )
                     }
@@ -437,7 +494,7 @@ function RouteComponent() {
                     onChange={(e) =>
                       field.handleChange(
                         e.target.value === ''
-                          ? field.state.value
+                          ? ('' as unknown as number)
                           : Number(e.target.value),
                       )
                     }

@@ -11,6 +11,9 @@ export interface Restaurant {
   created_at: Date
   updated_at: Date
   visits?: Visit[]
+  visits_avg_cost?: string
+  visits_avg_party_size?: string
+  visits_max_visited_at?: string
 }
 
 export enum CuisineType {
