@@ -25,6 +25,14 @@
         "database": "server",
         "username": "root"
       }
-    ]
+    ],
+    "emeraldwalk.runonsave": {
+      "commands": [
+        {
+          "match": ".*database/migrations/.*\\.php$",
+          "cmd": "cd server && php artisan ide-helper:models -RW"
+        }
+      ]
+    }
   },
 }

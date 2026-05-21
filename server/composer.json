@@ -17,6 +17,8 @@
         "spatie/laravel-query-builder": "^7.3"
     },
     "require-dev": {
+        "barryvdh/laravel-ide-helper": "^3.7",
+        "doctrine/dbal": "^4.4",
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
@@ -46,6 +48,11 @@
             "@php artisan migrate --force",
             "npm install --ignore-scripts",
             "npm run build"
+        ],
+        "ide": [
+            "@php artisan ide-helper:generate",
+            "@php artisan ide-helper:models -RW",
+            "@php artisan ide-helper:meta"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
