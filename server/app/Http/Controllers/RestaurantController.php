@@ -51,7 +51,9 @@ class RestaurantController extends Controller
      */
     public function show(Team $team, Restaurant $restaurant)
     {
-        return $restaurant;
+        return QueryBuilder::for(Restaurant::where('id', $restaurant->id))
+            ->allowedIncludes('visits')
+            ->first();
     }
 
     /**
