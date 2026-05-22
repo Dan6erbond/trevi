@@ -33,7 +33,6 @@ Route::prefix('api')->group(function () {
                     Route::post('', [RestaurantController::class, 'store'])->middleware('can:view,team');
 
                     Route::prefix('{restaurant}')
-                        ->scopeBindings()
                         ->group(function () {
                             Route::get('', [RestaurantController::class, 'show'])->middleware('can:view,restaurant');
                             Route::patch('', [RestaurantController::class, 'update'])->middleware('can:update,restaurant');

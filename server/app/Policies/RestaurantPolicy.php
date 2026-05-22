@@ -37,6 +37,11 @@ class RestaurantPolicy
      */
     public function update(User $user, Restaurant $restaurant): bool
     {
+        logger()->info('RestaurantPolicy.update', [
+            'user' => $user->id,
+            'restaurant' => $restaurant->id,
+        ]);
+
         return $restaurant->team->isMember($user);
     }
 

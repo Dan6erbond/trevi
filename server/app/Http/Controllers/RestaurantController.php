@@ -66,13 +66,15 @@ class RestaurantController extends Controller
      */
     public function update(UpdateRestaurantRequest $request, Team $team, Restaurant $restaurant)
     {
-        return $restaurant->update([
+        $restaurant->update([
             'name' => $request['name'],
             'address' => $request['address'],
             'menuUrl' => $request['menuUrl'],
             'cuisine' => $request['cuisine'],
             'tags' => $request['tags'],
         ]);
+
+        return $restaurant;
     }
 
     /**

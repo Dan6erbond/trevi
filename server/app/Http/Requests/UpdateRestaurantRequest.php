@@ -15,7 +15,7 @@ class UpdateRestaurantRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()->can('update', Restaurant::class);
+        return $this->user()->can('update', $this->route('restaurant'));
     }
 
     /**

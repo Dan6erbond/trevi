@@ -23,6 +23,7 @@ import {
   CalendarIcon,
   ChevronDown,
   DollarSign,
+  Edit,
   ExternalLink,
   MapPin,
   Star,
@@ -41,12 +42,17 @@ import { useTeamContext } from '#/contexts/team'
 import { env } from '#/env'
 import type { Restaurant } from '#/lib/types/restaurant'
 import { useForm } from '@tanstack/react-form'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios, { AxiosError } from 'axios'
 import { format, formatDistanceToNow } from 'date-fns'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import z from 'zod'
 import { formatCHF, getDollarRating } from '#/lib/utils'
+import { restaurantSchema } from '#/lib/schemas/restaurant'
+import type { RestaurantFormValues } from '#/lib/schemas/restaurant'
+import { useAppForm } from '#/lib/forms/app'
+import { restaurantFormOpts } from '#/lib/forms/restaurant'
+import RestaurantDialog from '#/components/restaurant/dialog'
 
 // Fetcher function using global Axios and VITE_SERVER_URL
 // Note: activeTeam needs to come from your auth/team state store.
@@ -78,6 +84,8 @@ type VisitFormValues = z.infer<typeof visitSchema>
 function RouteComponent() {
   const { id } = Route.useParams()
 
+  const queryClient = useQueryClient()
+
   const { activeTeam } = useTeamContext()
 
   const {
@@ -89,6 +97,68 @@ function RouteComponent() {
     queryKey: ['teams', activeTeam?.id, 'restaurants', id],
     queryFn: () => fetchRestaurant(activeTeam!.id, id),
     enabled: activeTeam != null,
+  })
+
+  const [isEditOpen, setIsEditOpen] = useState(false)
+
+  const editRestaurant = useMutation({
+    mutationFn: async ({
+      tags,
+      location,
+      menuLink,
+      ...values
+    }: RestaurantFormValues) => {
+      const parsedTags = tags
+        ? tags
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : []
+
+      try {
+        const res = await axios.patch(
+          `${env.VITE_SERVER_URL}/api/teams/${activeTeam!.id}/restaurants/${id}`,
+          {
+            ...values,
+            address: location,
+            tags: parsedTags,
+            menuUrl: menuLink,
+          },
+        )
+
+        return res.data
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          if (error.response?.data.errors) {
+            visitForm.setErrorMap({
+              onSubmit: {
+                fields: error.response.data.errors,
+              },
+            })
+          }
+        }
+
+        throw error
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['restaurants'] })
+      refetch()
+      setIsEditOpen(false)
+    },
+  })
+
+  const form = useAppForm({
+    ...restaurantFormOpts,
+    defaultValues: {
+      ...restaurant,
+      menuLink: restaurant?.menuUrl,
+      location: restaurant?.address,
+      tags: restaurant?.tags.join(', '),
+    } as RestaurantFormValues,
+    onSubmit: async ({ value }) => {
+      await editRestaurant.mutateAsync(value)
+    },
   })
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -106,7 +176,7 @@ function RouteComponent() {
       } catch (error) {
         if (error instanceof AxiosError) {
           if (error.response?.data.errors) {
-            form.setErrorMap({
+            visitForm.setErrorMap({
               onSubmit: {
                 fields: error.response.data.errors,
               },
@@ -120,11 +190,11 @@ function RouteComponent() {
     onSuccess: () => {
       refetch()
       setIsCreateOpen(false)
-      form.reset()
+      visitForm.reset()
     },
   })
 
-  const form = useForm({
+  const visitForm = useForm({
     defaultValues: {
       title: '',
       visitedAt: new Date(),
@@ -213,7 +283,14 @@ function RouteComponent() {
               </a>
             </Button>
           )}
-          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+          <Button size="icon-sm" onClick={() => setIsEditOpen(true)}>
+            <Edit />
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setIsCreateOpen(true)}
+          >
             Log a Visit
           </Button>
         </div>
@@ -379,11 +456,11 @@ function RouteComponent() {
             onSubmit={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              form.handleSubmit()
+              visitForm.handleSubmit()
             }}
             className="space-y-4"
           >
-            <form.Field name="title">
+            <visitForm.Field name="title">
               {(field) => (
                 <div className="space-y-1.5">
                   <Label htmlFor={field.name}>Title</Label>
@@ -398,9 +475,9 @@ function RouteComponent() {
                   <Errors errors={field.state.meta.errors} />
                 </div>
               )}
-            </form.Field>
+            </visitForm.Field>
 
-            <form.Field name="visitedAt">
+            <visitForm.Field name="visitedAt">
               {(field) => (
                 <div className="space-y-1.5">
                   <Label htmlFor={field.name}>Visited at</Label>
@@ -447,9 +524,9 @@ function RouteComponent() {
                   <Errors errors={field.state.meta.errors} />
                 </div>
               )}
-            </form.Field>
+            </visitForm.Field>
 
-            <form.Field name="cost">
+            <visitForm.Field name="cost">
               {(field) => (
                 <div className="space-y-1.5">
                   <Label htmlFor={field.name}>Cost</Label>
@@ -473,9 +550,9 @@ function RouteComponent() {
                   <Errors errors={field.state.meta.errors} />
                 </div>
               )}
-            </form.Field>
+            </visitForm.Field>
 
-            <form.Field name="partySize">
+            <visitForm.Field name="partySize">
               {(field) => (
                 <div className="space-y-1.5">
                   <Label htmlFor={field.name}>Party size</Label>
@@ -499,7 +576,7 @@ function RouteComponent() {
                   <Errors errors={field.state.meta.errors} />
                 </div>
               )}
-            </form.Field>
+            </visitForm.Field>
 
             {/* Action Triggers */}
             <div className="flex justify-end gap-2 pt-2">
@@ -508,7 +585,7 @@ function RouteComponent() {
                 variant="outline"
                 onClick={() => {
                   setIsCreateOpen(false)
-                  form.reset()
+                  visitForm.reset()
                 }}
               >
                 Cancel
@@ -521,6 +598,17 @@ function RouteComponent() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <form.AppForm>
+        <RestaurantDialog
+          open={isEditOpen}
+          onOpenChange={setIsEditOpen}
+          onCancel={() => {
+            setIsEditOpen(false)
+          }}
+          isPending={editRestaurant.isPending}
+        />
+      </form.AppForm>
     </div>
   )
 }
