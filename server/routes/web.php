@@ -91,5 +91,11 @@ Route::prefix('api')->group(function () {
             });
     });
 
-    Route::get('team-invites', [TeamInviteController::class, 'userIndex'])->middleware('auth:sanctum');
+    Route::prefix('team-invites')->middleware('auth:sanctum')->group(function () {
+        Route::get('', [TeamInviteController::class, 'userIndex']);
+        Route::prefix('{invite}')->group(function () {
+            Route::post('accept', [TeamInviteController::class, 'accept'])->middleware('can:accept,invite');
+            Route::post('reject', [TeamInviteController::class, 'reject'])->middleware('can:reject,invite');
+        });
+    });
 });

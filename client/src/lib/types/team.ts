@@ -16,9 +16,12 @@ export interface Pivot {
 export interface TeamInvite {
   id: string
   email: string
+  accepted_at: string | null
+  rejected_at: string | null
   created_by_id: number
   created_by?: User
   created_at: Date
   updated_at: Date
   team_id: number
+  team?: Team
 }

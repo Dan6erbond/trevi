@@ -29,6 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table'
+import type { Team, TeamInvite } from '#/lib/types/team'
 import {
   flexRender,
   getCoreRowModel,
@@ -45,7 +46,6 @@ import type { User as IUser } from '#/lib/types/user'
 import { Input } from '#/components/ui/input'
 import { Label } from '#/components/ui/label'
 import { Spinner } from '#/components/ui/spinner'
-import type { Team } from '#/lib/types/team'
 import axios from 'axios'
 import { createFileRoute } from '@tanstack/react-router'
 import { env } from '#/env'
@@ -186,7 +186,7 @@ function RouteComponent() {
     data: invites = [],
     refetch: refetchInvites,
     isLoading: isLoadingInvites,
-  } = useQuery<IUser[]>({
+  } = useQuery<TeamInvite[]>({
     queryKey: ['teams', id, 'invites'],
     queryFn: async () => {
       const res = await axios.get(
@@ -221,7 +221,7 @@ function RouteComponent() {
     onSubmit: ({ value }) => inviteUser.mutateAsync(value),
   })
 
-  const [isDeletingInvite, setIsDeletingInvite] = useState<IUser | null>(null)
+  const [isDeletingInvite, setIsDeletingInvite] = useState<TeamInvite | null>(null)
 
   const deleteInvite = useMutation({
     mutationFn: async () => {
@@ -237,7 +237,7 @@ function RouteComponent() {
     },
   })
 
-  const inviteColumns = useMemo<ColumnDef<IUser>[]>(
+  const inviteColumns = useMemo<ColumnDef<TeamInvite>[]>(
     () => [
       {
         accessorKey: 'email',
@@ -453,7 +453,7 @@ function RouteComponent() {
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={memberColumns.length}
+                    colSpan={inviteColumns.length}
                     className="h-32 text-center text-muted-foreground"
                   >
                     No invites to show
@@ -463,7 +463,7 @@ function RouteComponent() {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={memberColumns.length}
+                  colSpan={inviteColumns.length}
                   className="h-32 text-center text-muted-foreground"
                 >
                   Loading invites...

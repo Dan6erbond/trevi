@@ -14,15 +14,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int $team_id
+ * @property string|null $rejected_at
+ * @property string|null $accepted_at
  * @property-read \App\Models\User|null $createdBy
  * @property-read \App\Models\Team $team
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamInvite newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamInvite newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamInvite query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamInvite whereAcceptedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamInvite whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamInvite whereCreatedById($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamInvite whereEmail($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamInvite whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamInvite whereRejectedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamInvite whereTeamId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TeamInvite whereUpdatedAt($value)
  * @mixin \Eloquent

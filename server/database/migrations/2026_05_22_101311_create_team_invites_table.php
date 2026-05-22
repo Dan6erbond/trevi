@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('email');
             $table->foreignIdFor(Team::class, 'team_id')->cascadeOnDelete();
             $table->foreignIdFor(User::class, 'created_by_id')->cascadeOnDelete();
+            $table->dateTime('accepted_at')->nullable();
+            $table->dateTime('rejected_at')->nullable();
             $table->timestamps();
         });
     }
