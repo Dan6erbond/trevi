@@ -7,6 +7,7 @@ import { queryOptions } from '@tanstack/react-query'
 export const teamsQuery = () =>
   queryOptions<Team[]>({
     queryKey: ['teams'],
+    initialData: [],
     queryFn: async () => {
       const res = await axios.get(`${env.VITE_SERVER_URL}/api/teams`)
       return res.data

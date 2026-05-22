@@ -82,11 +82,12 @@ function RouteComponent() {
   })
 
   const {
-    data: members = [],
+    data: members,
     refetch: refetchMembers,
-    isLoading: isLoadingMembers,
+    isFetching: isLoadingMembers,
   } = useQuery<IUser[]>({
     queryKey: ['teams', id, 'members'],
+    initialData: [],
     queryFn: async () => {
       const res = await axios.get(
         `${env.VITE_SERVER_URL}/api/teams/${id}/members`,
@@ -188,11 +189,12 @@ function RouteComponent() {
   })
 
   const {
-    data: invites = [],
+    data: invites,
     refetch: refetchInvites,
-    isLoading: isLoadingInvites,
+    isFetching: isLoadingInvites,
   } = useQuery<TeamInvite[]>({
     queryKey: ['teams', id, 'invites'],
+    initialData: [],
     queryFn: async () => {
       const res = await axios.get(
         `${env.VITE_SERVER_URL}/api/teams/${id}/invites?include=createdBy`,

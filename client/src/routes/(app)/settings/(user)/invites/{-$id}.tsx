@@ -49,11 +49,12 @@ function RouteComponent() {
   const navigate = useNavigate()
 
   const {
-    data: invites = [],
+    data: invites,
     refetch: refetchInvites,
-    isLoading: isLoadingInvites,
+    isFetching: isLoadingInvites,
   } = useQuery<TeamInvite[]>({
     queryKey: ['team-invites'],
+    initialData: [],
     queryFn: async () => {
       const res = await axios.get(
         `${env.VITE_SERVER_URL}/api/team-invites?include=createdBy,team`,

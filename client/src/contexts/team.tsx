@@ -22,7 +22,7 @@ const TeamContext = createContext<TeamContext>({
 export function TeamContextProvider({ children }: { children: ReactNode }) {
   const [activeTeam, setActiveTeam] = useState<Team | null>(null)
 
-  const { data: teams = [], isLoading } = useQuery(teamsQuery())
+  const { data: teams, isLoading } = useQuery(teamsQuery())
 
   useEffect(() => {
     if (!activeTeam && teams.length > 0) {
