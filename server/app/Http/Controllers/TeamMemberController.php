@@ -47,5 +47,9 @@ class TeamMemberController extends Controller
     public function destroy(Team $team, User $user)
     {
         $team->members()->detach($user->id);
+
+        return [
+            'success' => 'true'
+        ];
     }
 }

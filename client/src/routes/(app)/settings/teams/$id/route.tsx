@@ -14,8 +14,6 @@ export const Route = createFileRoute('/(app)/settings/teams/$id')({
 function RouteComponent() {
   const { id } = Route.useParams()
 
-  // In a full implementation, you would query this data via TanStack Query using Axios:
-  // const serverUrl = env.VITE_SERVER_URL
   const { data: team } = useQuery<Team>({
     queryKey: ['teams', id],
     queryFn: async ({ queryKey: [_, id] }) => {

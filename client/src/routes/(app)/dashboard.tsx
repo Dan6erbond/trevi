@@ -296,8 +296,8 @@ function RouteComponent() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuItem
-                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
                   onClick={() => setDeletingRestaurant(restaurant)}
+                  variant="destructive"
                 >
                   Delete
                 </DropdownMenuItem>
