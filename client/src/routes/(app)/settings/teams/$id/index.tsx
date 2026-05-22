@@ -1,5 +1,8 @@
 import {
   AtSign,
+  CalendarCheck,
+  CalendarX,
+  Clipboard,
   MailMinus,
   MoreHorizontal,
   Shield,
@@ -49,6 +52,8 @@ import { Spinner } from '#/components/ui/spinner'
 import axios from 'axios'
 import { createFileRoute } from '@tanstack/react-router'
 import { env } from '#/env'
+import { format } from 'date-fns'
+import { toast } from 'sonner'
 import { useAuthContext } from '#/contexts/auth'
 import { useForm } from '@tanstack/react-form'
 import z from 'zod'
@@ -221,7 +226,9 @@ function RouteComponent() {
     onSubmit: ({ value }) => inviteUser.mutateAsync(value),
   })
 
-  const [isDeletingInvite, setIsDeletingInvite] = useState<TeamInvite | null>(null)
+  const [isDeletingInvite, setIsDeletingInvite] = useState<TeamInvite | null>(
+    null,
+  )
 
   const deleteInvite = useMutation({
     mutationFn: async () => {
@@ -268,25 +275,75 @@ function RouteComponent() {
         ),
       },
       {
+        accessorKey: 'accepted_at',
+        header: () => (
+          <div className="flex items-center gap-2">
+            <CalendarCheck className="h-4 w-4 text-muted-foreground" />
+            <span>Accepted at</span>
+          </div>
+        ),
+        cell: ({ cell }) => (
+          <div className="font-semibold text-foreground">
+            {cell.getValue<string>() &&
+              format(new Date(cell.getValue<string>()), 'MMMM d, yyyy')}
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'rejected_at',
+        header: () => (
+          <div className="flex items-center gap-2">
+            <CalendarX className="h-4 w-4 text-muted-foreground" />
+            <span>Rejected at</span>
+          </div>
+        ),
+        cell: ({ cell }) => (
+          <div className="font-semibold text-foreground">
+            {cell.getValue<string>() &&
+              format(new Date(cell.getValue<string>()), 'MMMM d, yyyy')}
+          </div>
+        ),
+      },
+      {
         id: 'actions',
         cell: ({ row: { original } }) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem
-                onClick={() => setIsDeletingInvite(original)}
-                variant="destructive"
+          <div className="flex gap-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem
+                  onClick={() => setIsDeletingInvite(original)}
+                  variant="destructive"
+                >
+                  <MailMinus />
+                  Revoke
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {!original.accepted_at && !original.rejected_at && (
+              <Button
+                size="icon-sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    new URL(
+                      `/settings/invites/${original.id}`,
+                      window.location.href,
+                    ).toString(),
+                  )
+
+                  toast.success('Invite link copied')
+                }}
               >
-                <MailMinus />
-                Revoke
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <Clipboard />
+              </Button>
+            )}
+          </div>
         ),
       },
     ],

@@ -10,6 +10,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TeamContextProvider } from '#/contexts/team'
+import { Toaster } from '#/components/ui/sonner'
 import { TooltipProvider } from '#/components/ui/tooltip'
 import appCss from '../styles.css?url'
 import axios from 'axios'
@@ -54,7 +55,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <TooltipProvider>
           <AuthContextProvider>
-            <TeamContextProvider>{children}</TeamContextProvider>
+            <TeamContextProvider>
+              {children}
+              <Toaster />
+            </TeamContextProvider>
           </AuthContextProvider>
         </TooltipProvider>
         <TanStackDevtools
