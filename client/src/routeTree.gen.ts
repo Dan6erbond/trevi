@@ -13,6 +13,8 @@ import { Route as appRouteRouteImport } from './routes/(app)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as appDashboardRouteImport } from './routes/(app)/dashboard'
 import { Route as appRestaurantsIdRouteImport } from './routes/(app)/restaurants/$id'
+import { Route as appSettingsTeamsIdRouteRouteImport } from './routes/(app)/settings/teams/$id/route'
+import { Route as appSettingsTeamsIdIndexRouteImport } from './routes/(app)/settings/teams/$id/index'
 
 const appRouteRoute = appRouteRouteImport.update({
   id: '/(app)',
@@ -33,16 +35,29 @@ const appRestaurantsIdRoute = appRestaurantsIdRouteImport.update({
   path: '/restaurants/$id',
   getParentRoute: () => appRouteRoute,
 } as any)
+const appSettingsTeamsIdRouteRoute = appSettingsTeamsIdRouteRouteImport.update({
+  id: '/settings/teams/$id',
+  path: '/settings/teams/$id',
+  getParentRoute: () => appRouteRoute,
+} as any)
+const appSettingsTeamsIdIndexRoute = appSettingsTeamsIdIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => appSettingsTeamsIdRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof appDashboardRoute
   '/restaurants/$id': typeof appRestaurantsIdRoute
+  '/settings/teams/$id': typeof appSettingsTeamsIdRouteRouteWithChildren
+  '/settings/teams/$id/': typeof appSettingsTeamsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof appDashboardRoute
   '/restaurants/$id': typeof appRestaurantsIdRoute
+  '/settings/teams/$id': typeof appSettingsTeamsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -50,18 +65,27 @@ export interface FileRoutesById {
   '/(app)': typeof appRouteRouteWithChildren
   '/(app)/dashboard': typeof appDashboardRoute
   '/(app)/restaurants/$id': typeof appRestaurantsIdRoute
+  '/(app)/settings/teams/$id': typeof appSettingsTeamsIdRouteRouteWithChildren
+  '/(app)/settings/teams/$id/': typeof appSettingsTeamsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/restaurants/$id'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/restaurants/$id'
+    | '/settings/teams/$id'
+    | '/settings/teams/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/restaurants/$id'
+  to: '/' | '/dashboard' | '/restaurants/$id' | '/settings/teams/$id'
   id:
     | '__root__'
     | '/'
     | '/(app)'
     | '/(app)/dashboard'
     | '/(app)/restaurants/$id'
+    | '/(app)/settings/teams/$id'
+    | '/(app)/settings/teams/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -99,17 +123,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof appRestaurantsIdRouteImport
       parentRoute: typeof appRouteRoute
     }
+    '/(app)/settings/teams/$id': {
+      id: '/(app)/settings/teams/$id'
+      path: '/settings/teams/$id'
+      fullPath: '/settings/teams/$id'
+      preLoaderRoute: typeof appSettingsTeamsIdRouteRouteImport
+      parentRoute: typeof appRouteRoute
+    }
+    '/(app)/settings/teams/$id/': {
+      id: '/(app)/settings/teams/$id/'
+      path: '/'
+      fullPath: '/settings/teams/$id/'
+      preLoaderRoute: typeof appSettingsTeamsIdIndexRouteImport
+      parentRoute: typeof appSettingsTeamsIdRouteRoute
+    }
   }
 }
+
+interface appSettingsTeamsIdRouteRouteChildren {
+  appSettingsTeamsIdIndexRoute: typeof appSettingsTeamsIdIndexRoute
+}
+
+const appSettingsTeamsIdRouteRouteChildren: appSettingsTeamsIdRouteRouteChildren =
+  {
+    appSettingsTeamsIdIndexRoute: appSettingsTeamsIdIndexRoute,
+  }
+
+const appSettingsTeamsIdRouteRouteWithChildren =
+  appSettingsTeamsIdRouteRoute._addFileChildren(
+    appSettingsTeamsIdRouteRouteChildren,
+  )
 
 interface appRouteRouteChildren {
   appDashboardRoute: typeof appDashboardRoute
   appRestaurantsIdRoute: typeof appRestaurantsIdRoute
+  appSettingsTeamsIdRouteRoute: typeof appSettingsTeamsIdRouteRouteWithChildren
 }
 
 const appRouteRouteChildren: appRouteRouteChildren = {
   appDashboardRoute: appDashboardRoute,
   appRestaurantsIdRoute: appRestaurantsIdRoute,
+  appSettingsTeamsIdRouteRoute: appSettingsTeamsIdRouteRouteWithChildren,
 }
 
 const appRouteRouteWithChildren = appRouteRoute._addFileChildren(

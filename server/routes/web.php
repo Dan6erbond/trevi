@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TeamMemberController;
 use App\Http\Controllers\VisitController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,11 @@ Route::prefix('api')->group(function () {
                             Route::put('', [RestaurantController::class, 'update'])->middleware('can:update,restaurant');
                             Route::delete('', [RestaurantController::class, 'destroy'])->middleware('can:delete,restaurant');
                         });
+                });
+
+                Route::prefix('members')->group(function () {
+                    Route::get('', [TeamMemberController::class, 'index'])->middleware('can:view,team');
+                    Route::delete('', [TeamMemberController::class, 'destroy'])->middleware('can:view,team');
                 });
             });
     });

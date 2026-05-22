@@ -77,7 +77,7 @@ export function AppSidebar() {
   })
 
   return (
-    <Sidebar>
+    <Sidebar className="z-20">
       <SidebarHeader className="border-b">
         <div className="flex items-center gap-2 px-2 py-2 font-semibold text-lg">
           <Utensils className="h-5 w-5" />
@@ -111,6 +111,15 @@ export function AppSidebar() {
                       onClick={() => setActiveTeam(team)}
                     >
                       {team.name}
+                      <Button size="icon-xs" variant="ghost" asChild>
+                        <Link
+                          to="/settings/teams/$id"
+                          params={{ id: team.id.toString() }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Settings />
+                        </Link>
+                      </Button>
                     </DropdownMenuItem>
                   ))}
 
