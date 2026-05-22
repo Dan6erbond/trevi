@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from '#/components/ui/table'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   flexRender,
   getCoreRowModel,
@@ -36,7 +37,6 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { Spinner } from '#/components/ui/spinner'
 import type { TeamInvite } from '#/lib/types/team'
 import axios from 'axios'
-import { createFileRoute } from '@tanstack/react-router'
 import { env } from '#/env'
 import { format } from 'date-fns'
 
@@ -46,6 +46,7 @@ export const Route = createFileRoute('/(app)/settings/(user)/invites/{-$id}')({
 
 function RouteComponent() {
   const { id } = Route.useParams()
+  const navigate = useNavigate()
 
   const {
     data: invites = [],
@@ -85,6 +86,12 @@ function RouteComponent() {
     onSuccess: () => {
       refetchInvites()
       setIsAcceptingInvite(null)
+      if (id) {
+        navigate({
+          to: '/settings/invites/{-$id}',
+          params: { id: undefined },
+        })
+      }
     },
   })
 
@@ -103,6 +110,12 @@ function RouteComponent() {
     onSuccess: () => {
       refetchInvites()
       setIsRejectingInvite(null)
+      if (id) {
+        navigate({
+          to: '/settings/invites/{-$id}',
+          params: { id: undefined },
+        })
+      }
     },
   })
 
@@ -268,7 +281,15 @@ function RouteComponent() {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => setIsAcceptingInvite(null)}
+              onClick={() => {
+                setIsAcceptingInvite(null)
+                if (id) {
+                  navigate({
+                    to: '/settings/invites/{-$id}',
+                    params: { id: undefined },
+                  })
+                }
+              }}
             >
               Cancel
             </Button>
