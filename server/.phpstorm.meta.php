@@ -2342,8 +2342,7 @@ namespace PHPSTORM_META {
 'cache.headers','can','guest','password.confirm','precognitive',
 'signed','throttle','verified',);
         registerArgumentsSet('routes', 
-'sanctum.csrf-cookie','storage.local',
-'storage.local.upload',);
+'sanctum.csrf-cookie','storage.local','storage.local.upload',);
         registerArgumentsSet('views', 
 'welcome','laravel-exceptions-renderer::components.badge','laravel-exceptions-renderer::components.empty-state','laravel-exceptions-renderer::components.file-with-line','laravel-exceptions-renderer::components.formatted-source',
 'laravel-exceptions-renderer::components.frame','laravel-exceptions-renderer::components.frame-code','laravel-exceptions-renderer::components.header','laravel-exceptions-renderer::components.http-method','laravel-exceptions-renderer::components.icons.alert',

@@ -1,4 +1,12 @@
-import { AtSign, MoreHorizontal, Shield, User, UserMinus } from 'lucide-react'
+import {
+  AtSign,
+  MailMinus,
+  MoreHorizontal,
+  Shield,
+  User,
+  UserMinus,
+  UserPlus,
+} from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -32,17 +40,28 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Button } from '#/components/ui/button'
 import { Checkbox } from '#/components/ui/checkbox'
 import type { ColumnDef } from '@tanstack/react-table'
+import { Errors } from '#/components/ui/errors'
 import type { User as IUser } from '#/lib/types/user'
+import { Input } from '#/components/ui/input'
+import { Label } from '#/components/ui/label'
 import { Spinner } from '#/components/ui/spinner'
 import type { Team } from '#/lib/types/team'
 import axios from 'axios'
 import { createFileRoute } from '@tanstack/react-router'
 import { env } from '#/env'
 import { useAuthContext } from '#/contexts/auth'
+import { useForm } from '@tanstack/react-form'
+import z from 'zod'
 
 export const Route = createFileRoute('/(app)/settings/teams/$id/')({
   component: RouteComponent,
 })
+
+const inviteSchema = z.object({
+  email: z.email(),
+})
+
+type InviteFormValues = z.infer<typeof inviteSchema>
 
 function RouteComponent() {
   const { id } = Route.useParams()
@@ -57,7 +76,11 @@ function RouteComponent() {
     },
   })
 
-  const { data = [], refetch } = useQuery<IUser[]>({
+  const {
+    data: members = [],
+    refetch: refetchMembers,
+    isLoading: isLoadingMembers,
+  } = useQuery<IUser[]>({
     queryKey: ['teams', id, 'members'],
     queryFn: async () => {
       const res = await axios.get(
@@ -79,12 +102,12 @@ function RouteComponent() {
       return res.data
     },
     onSuccess: () => {
-      refetch()
+      refetchMembers()
       setIsRemovingMember(null)
     },
   })
 
-  const columns = useMemo<ColumnDef<IUser>[]>(
+  const memberColumns = useMemo<ColumnDef<IUser>[]>(
     () => [
       {
         accessorKey: 'name',
@@ -153,9 +176,126 @@ function RouteComponent() {
     [user],
   )
 
-  const table = useReactTable({
-    data,
-    columns,
+  const membersTable = useReactTable({
+    data: members,
+    columns: memberColumns,
+    getCoreRowModel: getCoreRowModel(),
+  })
+
+  const {
+    data: invites = [],
+    refetch: refetchInvites,
+    isLoading: isLoadingInvites,
+  } = useQuery<IUser[]>({
+    queryKey: ['teams', id, 'invites'],
+    queryFn: async () => {
+      const res = await axios.get(
+        `${env.VITE_SERVER_URL}/api/teams/${id}/invites?include=createdBy`,
+      )
+
+      return res.data.data
+    },
+  })
+
+  const [isInviteOpen, setIsInviteOpen] = useState(false)
+
+  const inviteUser = useMutation({
+    mutationFn: async (values: InviteFormValues) => {
+      const res = await axios.post(
+        `${env.VITE_SERVER_URL}/api/teams/${id}/invites`,
+        values,
+      )
+
+      return res.data
+    },
+    onSuccess: () => {
+      refetchInvites()
+      setIsInviteOpen(false)
+      form.reset()
+    },
+  })
+
+  const form = useForm({
+    defaultValues: {} as InviteFormValues,
+    validators: { onChange: inviteSchema },
+    onSubmit: ({ value }) => inviteUser.mutateAsync(value),
+  })
+
+  const [isDeletingInvite, setIsDeletingInvite] = useState<IUser | null>(null)
+
+  const deleteInvite = useMutation({
+    mutationFn: async () => {
+      const res = await axios.delete(
+        `${env.VITE_SERVER_URL}/api/teams/${id}/invites/${isDeletingInvite?.id}`,
+      )
+
+      return res.data
+    },
+    onSuccess: () => {
+      refetchInvites()
+      setIsDeletingInvite(null)
+    },
+  })
+
+  const inviteColumns = useMemo<ColumnDef<IUser>[]>(
+    () => [
+      {
+        accessorKey: 'email',
+        header: () => (
+          <div className="flex items-center gap-2">
+            <AtSign className="h-4 w-4 text-muted-foreground" />
+            <span>Email</span>
+          </div>
+        ),
+        cell: ({ cell }) => (
+          <div className="font-semibold text-foreground">
+            {cell.getValue<string>()}
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'created_by.name',
+        header: () => (
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-muted-foreground" />
+            <span>Created by</span>
+          </div>
+        ),
+        cell: ({ cell }) => (
+          <div className="font-semibold text-foreground">
+            {cell.getValue<string>()}
+          </div>
+        ),
+      },
+      {
+        id: 'actions',
+        cell: ({ row: { original } }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem
+                onClick={() => setIsDeletingInvite(original)}
+                variant="destructive"
+              >
+                <MailMinus />
+                Revoke
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ],
+    [],
+  )
+
+  const invitesTable = useReactTable({
+    data: invites,
+    columns: inviteColumns,
     getCoreRowModel: getCoreRowModel(),
   })
 
@@ -165,7 +305,7 @@ function RouteComponent() {
       <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
         <Table className="min-w-full">
           <TableHeader className="bg-muted/40">
-            {table.getHeaderGroups().map((headerGroup) => (
+            {membersTable.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
                   <TableHead
@@ -184,8 +324,8 @@ function RouteComponent() {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
+            {!isLoadingMembers ? (
+              membersTable.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   className="border-b border-border transition-colors hover:bg-muted/30 data-[state=selected]:bg-muted"
@@ -203,7 +343,7 @@ function RouteComponent() {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={memberColumns.length}
                   className="h-32 text-center text-muted-foreground"
                 >
                   Loading members...
@@ -261,7 +401,175 @@ function RouteComponent() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <h2>Invites</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2>Invites</h2>
+        <Button
+          onClick={() => setIsInviteOpen(true)}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 self-start sm:self-auto gap-2"
+        >
+          <UserPlus className="h-4 w-4" />
+          Invite User
+        </Button>
+      </div>
+      <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+        <Table className="min-w-full">
+          <TableHeader className="bg-muted/40">
+            {invitesTable.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id} className="hover:bg-transparent">
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className="text-muted-foreground font-medium h-11"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {!isLoadingInvites ? (
+              invitesTable.getRowModel().rows.length ? (
+                invitesTable.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="border-b border-border transition-colors hover:bg-muted/30 data-[state=selected]:bg-muted"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="py-3.5 align-middle">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={memberColumns.length}
+                    className="h-32 text-center text-muted-foreground"
+                  >
+                    No invites to show
+                  </TableCell>
+                </TableRow>
+              )
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={memberColumns.length}
+                  className="h-32 text-center text-muted-foreground"
+                >
+                  Loading invites...
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Invite User</DialogTitle>
+            <DialogDescription>
+              Keep track of new culinary spots with your friends and family.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              form.handleSubmit()
+            }}
+            className="space-y-4"
+          >
+            <form.Field name="email">
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>Name</Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="abc@xyz.com"
+                  />
+                  <Errors errors={field.state.meta.errors} />
+                </div>
+              )}
+            </form.Field>
+
+            {/* Action Triggers */}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsInviteOpen(false)
+                  form.reset()
+                }}
+              >
+                Cancel
+              </Button>
+
+              <Button type="submit" disabled={inviteUser.isPending}>
+                {inviteUser.isPending ? 'Inviting...' : 'Invite User'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={isDeletingInvite !== null}
+        onOpenChange={(isOpen) => !isOpen && setIsDeletingInvite(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MailMinus className="h-5 w-5 text-destructive" />
+              Revoke Invite
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to revoke the invite to{' '}
+              <span className="font-semibold text-foreground">
+                {isDeletingInvite?.email}
+              </span>
+              ?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsDeletingInvite(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => deleteInvite.mutateAsync()}
+              disabled={deleteInvite.isPending}
+            >
+              {deleteInvite.isPending ? (
+                <>
+                  <Spinner data-icon="inline-start" />
+                  Revoking...
+                </>
+              ) : (
+                'Revoke'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

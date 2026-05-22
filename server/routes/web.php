@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TeamInviteController;
 use App\Http\Controllers\TeamMemberController;
 use App\Http\Controllers\VisitController;
 use Illuminate\Support\Facades\Route;
@@ -43,7 +44,13 @@ Route::prefix('api')->group(function () {
 
                 Route::prefix('members')->group(function () {
                     Route::get('', [TeamMemberController::class, 'index'])->middleware('can:view,team');
-                    Route::delete('', [TeamMemberController::class, 'destroy'])->middleware('can:view,team');
+                    Route::delete('', [TeamMemberController::class, 'destroy'])->middleware('can:update,team');
+                });
+
+                Route::prefix('invites')->group(function () {
+                    Route::get('', [TeamInviteController::class, 'index'])->middleware('can:view,team');
+                    Route::post('', [TeamInviteController::class, 'store'])->middleware('can:update,team');
+                    Route::delete('{invite}', [TeamInviteController::class, 'destroy'])->middleware('can:update,team');
                 });
             });
     });
@@ -83,4 +90,6 @@ Route::prefix('api')->group(function () {
                 });
             });
     });
+
+    Route::get('team-invites', [TeamInviteController::class, 'userIndex'])->middleware('auth:sanctum');
 });

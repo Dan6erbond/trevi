@@ -12,8 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $admins
- * @property-read int|null $admins_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\TeamInvite> $invites
+ * @property-read int|null $invites_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $members
  * @property-read int|null $members_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Restaurant> $restaurants
@@ -44,7 +44,7 @@ class Team extends Model
 
     public function admins()
     {
-        return $this->belongsToMany(User::class)
+        return $this->members()
             ->withPivot('is_admin')
             ->wherePivot('is_admin', true);
     }
@@ -59,5 +59,10 @@ class Team extends Model
     public function restaurants(): HasMany
     {
         return $this->hasMany(Restaurant::class);
+    }
+
+    public function invites(): HasMany
+    {
+        return $this->hasMany(TeamInvite::class);
     }
 }
