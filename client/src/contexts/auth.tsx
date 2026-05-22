@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect } from 'react'
+import { createContext, useContext, useEffect, useMemo } from 'react'
 import { useLocation, useNavigate } from '@tanstack/react-router'
 
 import { AxiosError } from 'axios'
@@ -30,7 +30,9 @@ export function AuthContextProvider({ children }: { children: ReactNode }) {
   }, [error])
 
   return (
-    <AuthContext.Provider value={{ user, isLoading }}>
+    <AuthContext.Provider
+      value={useMemo(() => ({ user, isLoading }), [user, isLoading])}
+    >
       {children}
     </AuthContext.Provider>
   )

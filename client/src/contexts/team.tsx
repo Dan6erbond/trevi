@@ -1,5 +1,5 @@
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 import type { Team } from '#/lib/types/team'
 import { teamsQuery } from '#/lib/queries/team'
@@ -32,7 +32,10 @@ export function TeamContextProvider({ children }: { children: ReactNode }) {
 
   return (
     <TeamContext.Provider
-      value={{ teams, isLoading, activeTeam, setActiveTeam }}
+      value={useMemo(
+        () => ({ teams, isLoading, activeTeam, setActiveTeam }),
+        [teams, isLoading, activeTeam, setActiveTeam],
+      )}
     >
       {children}
     </TeamContext.Provider>

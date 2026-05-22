@@ -1,60 +1,16 @@
-import type { CuisineType, Restaurant } from '#/lib/types/restaurant'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  DollarSign,
-  ExternalLink,
-  Eye,
-  LinkIcon,
-  MapPin,
-  MoreHorizontal,
-  Plus,
-  Tag,
-  Trash2,
-  Utensils,
-} from 'lucide-react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '#/components/ui/dropdown-menu'
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '#/components/ui/table'
 import axios, { AxiosError } from 'axios'
-import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table'
-import { formatCHF, getDollarRating } from '#/lib/utils'
-import { useMemo, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import { Badge } from '#/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import type { ColumnDef } from '@tanstack/react-table'
+import { Plus } from 'lucide-react'
 import RestaurantDialog from '#/components/restaurant/dialog'
 import type { RestaurantFormValues } from '#/lib/schemas/restaurant'
-import { Spinner } from '#/components/ui/spinner'
+import { RestaurantsTable } from '#/components/restaurant/table'
+import { createFileRoute } from '@tanstack/react-router'
 import { env } from '#/env'
 import { restaurantFormOpts } from '#/lib/forms/restaurant'
-import { restaurantSchema } from '#/lib/schemas/restaurant'
 import { useAppForm } from '#/lib/forms/app'
-import { useForm } from '@tanstack/react-form'
+import { useState } from 'react'
 import { useTeamContext } from '#/contexts/team'
 
 export const Route = createFileRoute('/(app)/dashboard')({
@@ -62,22 +18,9 @@ export const Route = createFileRoute('/(app)/dashboard')({
 })
 
 function RouteComponent() {
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
 
   const { activeTeam } = useTeamContext()
-
-  const { data = [] } = useQuery<Restaurant[]>({
-    queryKey: ['restaurants'],
-    queryFn: async () => {
-      const res = await axios.get(
-        `${env.VITE_SERVER_URL}/api/teams/${activeTeam!.id}/restaurants?include=team`,
-      )
-
-      return res.data.data
-    },
-    enabled: activeTeam != null,
-  })
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
 
@@ -135,176 +78,6 @@ function RouteComponent() {
     },
   })
 
-  // Local state for tracking the record targetted for permanent deletion
-  const [deletingRestaurant, setDeletingRestaurant] =
-    useState<Restaurant | null>(null)
-
-  const deleteRestaurant = useMutation({
-    mutationFn: async () => {
-      const res = await axios.delete(
-        `${env.VITE_SERVER_URL}/api/teams/${activeTeam!.id}/restaurants/${deletingRestaurant!.id}`,
-      )
-
-      return res.data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['restaurants'] })
-      setDeletingRestaurant(null)
-    },
-  })
-
-  // Column definitions tailored with icons and clean custom renderers
-  const columns = useMemo<ColumnDef<Restaurant>[]>(
-    () => [
-      {
-        accessorKey: 'name',
-        header: () => (
-          <div className="flex items-center gap-2">
-            <Utensils className="h-4 w-4 text-muted-foreground" />
-            <span>Restaurant</span>
-          </div>
-        ),
-        cell: ({ cell }) => (
-          <div className="font-semibold text-foreground">
-            {cell.getValue<string>()}
-          </div>
-        ),
-      },
-      {
-        accessorKey: 'cuisine',
-        header: () => (
-          <div className="flex items-center gap-2">
-            <span>Cuisine</span>
-          </div>
-        ),
-        cell: ({ cell }) => (
-          <Badge variant="secondary" className="font-normal">
-            {cell.getValue<CuisineType>()}
-          </Badge>
-        ),
-      },
-      {
-        accessorKey: 'address',
-        header: () => (
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            <span>Location</span>
-          </div>
-        ),
-        cell: ({ cell }) => (
-          <span className="text-sm text-muted-foreground max-w-50 block truncate">
-            {cell.getValue<string>()}
-          </span>
-        ),
-      },
-      {
-        accessorKey: 'tags',
-        header: () => (
-          <div className="flex items-center gap-2">
-            <Tag className="h-4 w-4 text-muted-foreground" />
-            <span>Tags</span>
-          </div>
-        ),
-        cell: ({ row }) => (
-          <div className="flex flex-wrap gap-1 max-w-60">
-            {row.original.tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-muted text-muted-foreground"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        ),
-      },
-      {
-        accessorKey: 'menuUrl',
-        header: () => (
-          <div className="flex items-center gap-2">
-            <LinkIcon className="h-4 w-4 text-muted-foreground" />
-            <span>Menu</span>
-          </div>
-        ),
-        cell: ({ row }) => {
-          const url = row.original.menuUrl
-          if (!url)
-            return <span className="text-xs text-muted-foreground">—</span>
-          return (
-            <a
-              href={url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-primary hover:underline font-medium"
-            >
-              Link <ExternalLink className="h-3 w-3" />
-            </a>
-          )
-        },
-      },
-      {
-        accessorKey: 'visits_avg_cost',
-        header: () => (
-          <div className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-            <span>Average Spend</span>
-          </div>
-        ),
-        cell: ({ cell, row }) =>
-          cell.getValue<string>() && (
-            <span className="text-sm max-w-60 block truncate">
-              {formatCHF(Number(cell.getValue<string>()))}{' '}
-              <span className="text-muted-foreground">
-                ({formatCHF(Number(row.original.visits_avg_cost_party_size))} /
-                person)
-              </span>
-              ·{' '}
-              {getDollarRating(Number(row.original.visits_avg_cost_party_size))}
-            </span>
-          ),
-      },
-      {
-        id: 'actions',
-        cell: ({ row: { original: restaurant } }) => (
-          <div className="flex gap-2 items-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem
-                  onClick={() => setDeletingRestaurant(restaurant)}
-                  variant="destructive"
-                >
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button variant="outline" size="icon" asChild>
-              <Link
-                to="/restaurants/$id"
-                params={{ id: restaurant.id.toString() }}
-              >
-                <Eye />
-              </Link>
-            </Button>
-          </div>
-        ),
-      },
-    ],
-    [navigate],
-  )
-
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  })
-
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -326,103 +99,7 @@ function RouteComponent() {
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-        <Table className="min-w-full">
-          <TableHeader className="bg-muted/40">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="text-muted-foreground font-medium h-11"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="border-b border-border transition-colors hover:bg-muted/30 data-[state=selected]:bg-muted"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-3.5 align-middle">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-32 text-center text-muted-foreground"
-                >
-                  No restaurants saved yet.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Reusable programmatic Dialog for tracking removal confirmations */}
-      <Dialog
-        open={deletingRestaurant !== null}
-        onOpenChange={(isOpen) => !isOpen && setDeletingRestaurant(null)}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Trash2 className="h-5 w-5 text-destructive" />
-              Remove Restaurant
-            </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to remove{' '}
-              <span className="font-semibold text-foreground">
-                {deletingRestaurant?.name}
-              </span>
-              ? This will clear it from your joint wishlist.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-4 gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setDeletingRestaurant(null)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => deleteRestaurant.mutateAsync()}
-              disabled={deleteRestaurant.isPending}
-            >
-              {deleteRestaurant.isPending ? (
-                <>
-                  <Spinner data-icon="inline-start" />
-                  Removing...
-                </>
-              ) : (
-                'Remove'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RestaurantsTable />
 
       <form.AppForm>
         <RestaurantDialog

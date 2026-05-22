@@ -6,7 +6,9 @@ use App\Http\Requests\StoreRestaurantRequest;
 use App\Http\Requests\UpdateRestaurantRequest;
 use App\Models\Restaurant;
 use App\Models\Team;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class RestaurantController extends Controller
@@ -24,6 +26,24 @@ class RestaurantController extends Controller
                 ->withAvg('visits', DB::raw('cost / party_size'))
         )
             ->allowedIncludes('team')
+            ->allowedFilters(
+                'name',
+                'cuisine',
+                AllowedFilter::callback('tags', function (Builder $query, $value) {
+                    $tags = is_array($value)
+                        ? $value
+                        : explode(',', $value);
+
+                    logger()->info('tags.callback', [
+                        'value' => $value,
+                        'tags' => $tags,
+                    ]);
+
+                    $query->whereRaw('tags @> ?::jsonb', [
+                        json_encode(array_values($tags)),
+                    ]);
+                }),
+            )
             ->jsonPaginate();
     }
 
