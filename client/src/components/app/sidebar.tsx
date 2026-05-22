@@ -145,18 +145,6 @@ export function AppSidebar() {
               icon={<LayoutDashboard className="h-4 w-4" />}
               label="Dashboard"
             />
-
-            <Nav
-              to="/map"
-              icon={<MapPin className="h-4 w-4" />}
-              label="Map View"
-            />
-
-            <Nav
-              to="/suggestions"
-              icon={<Sparkles className="h-4 w-4" />}
-              label="AI Suggestions"
-            />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
