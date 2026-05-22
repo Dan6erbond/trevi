@@ -15,7 +15,7 @@ import type { Team } from '#/lib/types/team'
 
 export function TeamSettingsSidebar({ team }: { team?: Team }) {
   return (
-    <Sidebar className="inset-y-14 left-(--sidebar-width)">
+    <Sidebar className="absolute">
       <SidebarHeader className="border-b">
         <div className="flex items-center gap-2 px-2 py-2 font-semibold text-lg">
           {team ? (

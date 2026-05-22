@@ -12,7 +12,7 @@ import { Link } from '@tanstack/react-router'
 
 export function UserSettingsSidebar() {
   return (
-    <Sidebar className="inset-y-14 left-(--sidebar-width)">
+    <Sidebar className="absolute">
       <SidebarHeader className="border-b">
         <div className="flex items-center gap-2 px-2 py-2 font-semibold text-lg">
           <Settings />
