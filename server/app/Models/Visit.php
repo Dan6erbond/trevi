@@ -35,6 +35,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable('title', 'visited_at', 'cost', 'party_size', 'restaurant_id')]
 class Visit extends Model
 {
+    protected function casts(): array
+    {
+        return [
+            'visited_at' => 'datetime',
+        ];
+    }
+
     public function restaurant(): BelongsTo
     {
         return $this->belongsTo(Restaurant::class);
