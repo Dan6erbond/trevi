@@ -47,6 +47,13 @@ class RestaurantController extends Controller
             ->jsonPaginate();
     }
 
+    public function tags(Team $team)
+    {
+        return $team->restaurants()
+            ->selectRaw('DISTINCT jsonb_array_elements_text(tags) as tag')
+            ->pluck('tag');
+    }
+
     /**
      * Store a newly created resource in storage.
      */

@@ -31,6 +31,7 @@ import {
   Utensils,
 } from 'lucide-react'
 
+import RestaurantDialog from '#/components/restaurant/dialog'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '#/components/ui/button'
 import { Calendar } from '#/components/ui/calendar'
@@ -40,19 +41,17 @@ import { Label } from '#/components/ui/label'
 import { VisitCard } from '#/components/visit/card'
 import { useTeamContext } from '#/contexts/team'
 import { env } from '#/env'
+import { useAppForm } from '#/lib/forms/app'
+import { restaurantFormOpts } from '#/lib/forms/restaurant'
+import type { RestaurantFormValues } from '#/lib/schemas/restaurant'
 import type { Restaurant } from '#/lib/types/restaurant'
+import { formatCHF, getDollarRating } from '#/lib/utils'
 import { useForm } from '@tanstack/react-form'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios, { AxiosError } from 'axios'
 import { format, formatDistanceToNow } from 'date-fns'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import z from 'zod'
-import { formatCHF, getDollarRating } from '#/lib/utils'
-import { restaurantSchema } from '#/lib/schemas/restaurant'
-import type { RestaurantFormValues } from '#/lib/schemas/restaurant'
-import { useAppForm } from '#/lib/forms/app'
-import { restaurantFormOpts } from '#/lib/forms/restaurant'
-import RestaurantDialog from '#/components/restaurant/dialog'
 
 // Fetcher function using global Axios and VITE_SERVER_URL
 // Note: activeTeam needs to come from your auth/team state store.
@@ -103,25 +102,16 @@ function RouteComponent() {
 
   const editRestaurant = useMutation({
     mutationFn: async ({
-      tags,
       location,
       menuLink,
       ...values
     }: RestaurantFormValues) => {
-      const parsedTags = tags
-        ? tags
-            .split(',')
-            .map((t) => t.trim())
-            .filter(Boolean)
-        : []
-
       try {
         const res = await axios.patch(
           `${env.VITE_SERVER_URL}/api/teams/${activeTeam!.id}/restaurants/${id}`,
           {
             ...values,
             address: location,
-            tags: parsedTags,
             menuUrl: menuLink,
           },
         )
@@ -154,7 +144,6 @@ function RouteComponent() {
       ...restaurant,
       menuLink: restaurant?.menuUrl,
       location: restaurant?.address,
-      tags: restaurant?.tags.join(', '),
     } as RestaurantFormValues,
     onSubmit: async ({ value }) => {
       await editRestaurant.mutateAsync(value)

@@ -31,6 +31,7 @@ Route::prefix('api')->group(function () {
                 Route::prefix('restaurants')->group(function () {
                     Route::get('', [RestaurantController::class, 'index'])->middleware('can:view,team');
                     Route::post('', [RestaurantController::class, 'store'])->middleware('can:view,team');
+                    Route::get('/tags', [RestaurantController::class, 'tags'])->middleware('can:view,team');
 
                     Route::prefix('{restaurant}')
                         ->group(function () {

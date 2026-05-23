@@ -60,11 +60,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Badge } from '#/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CuisineType } from '#/lib/types/restaurant'
+import type { Tag as ITag } from '#/components/ui/tag-input'
 import { Link } from '@tanstack/react-router'
 import type { Restaurant } from '#/lib/types/restaurant'
 import { Spinner } from '#/components/ui/spinner'
+import { TagInput } from '#/components/ui/tag-input'
 import axios from 'axios'
 import { env } from '#/env'
+import { restaurantTagsQuery } from '#/lib/queries/restaurant'
 import { useTeamContext } from '#/contexts/team'
 
 export function RestaurantsTable() {
@@ -100,7 +103,10 @@ export function RestaurantsTable() {
       const tags = filters.find((f) => f.id === 'tags')?.value
 
       if (tags) {
-        sp.append('filter[tags]', tags as string)
+        sp.append(
+          'filter[tags]',
+          (tags as ITag<string>[]).map((t) => t.value).join(','),
+        )
       }
 
       const res = await axios.get(
@@ -111,6 +117,8 @@ export function RestaurantsTable() {
     },
     enabled: activeTeam != null,
   })
+
+  const { data: tags } = useQuery(restaurantTagsQuery(activeTeam))
 
   // Local state for tracking the record targetted for permanent deletion
   const [deletingRestaurant, setDeletingRestaurant] =
@@ -227,18 +235,15 @@ export function RestaurantsTable() {
             </div>
             <Collapsible open={showFilter} onOpenChange={setShowFilter}>
               <CollapsibleContent>
-                <InputGroup className="w-40">
-                  <InputGroupInput
-                    placeholder="Search by Tags"
-                    value={
-                      (column.getFilterValue() as string | undefined) ?? ''
-                    }
-                    onChange={(e) => column.setFilterValue(e.target.value)}
-                  />
-                  <InputGroupAddon>
-                    <Search />
-                  </InputGroupAddon>
-                </InputGroup>
+                <TagInput
+                  tags={
+                    (column.getFilterValue() as ITag<string>[] | undefined) ??
+                    []
+                  }
+                  setTags={column.setFilterValue}
+                  allTags={tags.map((t) => ({ label: t, value: t }))}
+                  placeholder='Filter by Tags'
+                />
               </CollapsibleContent>
             </Collapsible>
           </div>
@@ -347,7 +352,7 @@ export function RestaurantsTable() {
         ),
       },
     ],
-    [showFilter, setShowFilter],
+    [showFilter, setShowFilter, tags],
   )
 
   const table = useReactTable({

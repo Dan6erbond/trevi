@@ -18,7 +18,11 @@ import { CuisineType } from '#/lib/types/restaurant'
 import { Errors } from '#/components/ui/errors'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { TagInput } from '#/components/ui/tag-input'
 import { restaurantFormOpts } from '#/lib/forms/restaurant'
+import { restaurantTagsQuery } from '#/lib/queries/restaurant'
+import { useQuery } from '@tanstack/react-query'
+import { useTeamContext } from '#/contexts/team'
 import { useTypedAppFormContext } from '#/lib/forms/app'
 
 export default function RestaurantDialog({
@@ -29,7 +33,11 @@ export default function RestaurantDialog({
   onCancel?: () => void
   isPending?: boolean
 }) {
+  const { activeTeam } = useTeamContext()
+
   const form = useTypedAppFormContext(restaurantFormOpts)
+
+  const { data: tags } = useQuery(restaurantTagsQuery(activeTeam))
 
   return (
     <Dialog {...props}>
@@ -133,12 +141,15 @@ export default function RestaurantDialog({
             {(field) => (
               <div className="space-y-1.5">
                 <Label htmlFor={field.name}>Tags</Label>
-                <Input
-                  id={field.name}
-                  value={field.state.value || ''}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="e.g., date night, outdoor seating, budget friendly"
+                <TagInput
+                  tags={
+                    field.state.value?.map((t) => ({ label: t, value: t })) ??
+                    []
+                  }
+                  setTags={(tags) =>
+                    field.handleChange(tags.map((t) => t.value))
+                  }
+                  allTags={tags.map((t) => ({ label: t, value: t }))}
                 />
                 <p className="text-[11px] text-muted-foreground">
                   Separate your descriptive custom labels with commas.

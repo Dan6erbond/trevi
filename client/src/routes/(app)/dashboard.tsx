@@ -26,25 +26,16 @@ function RouteComponent() {
 
   const createRestaurant = useMutation({
     mutationFn: async ({
-      tags,
       location,
       menuLink,
       ...values
     }: RestaurantFormValues) => {
-      const parsedTags = tags
-        ? tags
-            .split(',')
-            .map((t) => t.trim())
-            .filter(Boolean)
-        : []
-
       try {
         const res = await axios.post(
           `${env.VITE_SERVER_URL}/api/teams/${activeTeam!.id}/restaurants`,
           {
             ...values,
             address: location,
-            tags: parsedTags,
             menuUrl: menuLink,
           },
         )
