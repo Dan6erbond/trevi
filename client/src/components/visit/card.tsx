@@ -257,7 +257,7 @@ export function VisitCard({ visit }: { visit: Visit }) {
             <form.Field name="review">
               {(field) => (
                 <div className="space-y-1.5">
-                  <Label htmlFor={field.name}>Visited at</Label>
+                  <Label htmlFor={field.name}>Review</Label>
                   <Textarea
                     id={field.name}
                     value={field.state.value}
