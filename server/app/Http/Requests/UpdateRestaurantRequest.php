@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Cuisine;
+use App\Models\Reservation;
 use App\Models\Restaurant;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -27,10 +28,14 @@ class UpdateRestaurantRequest extends FormRequest
     {
         return [
             'name' => ['sometimes'],
-            'address' => ['sometimes'],
-            'menuUrl' => ['sometimes', 'url'],
-            'cuisine' => [Rule::enum(Cuisine::class)],
-            'tags' => ['list'],
+            'address' => ['sometimes', 'nullable'],
+            'menuUrl' => ['sometimes', 'nullable', 'url'],
+            'cuisine' => ['sometimes', 'nullable', Rule::enum(Cuisine::class)],
+            'tags' => ['sometimes', 'list'],
+            'googleMapsEmbed' => ['sometimes', 'nullable', 'url'],
+            'reservation' => ['sometimes', 'nullable', Rule::enum(Reservation::class)],
+            'parkingAvailable' => ['boolean'],
+            'dogFriendly' => ['boolean'],
         ];
     }
 }

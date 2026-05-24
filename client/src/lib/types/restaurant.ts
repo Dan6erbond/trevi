@@ -4,10 +4,14 @@ export interface Restaurant {
   id: number
   team_id: number
   name: string
-  address: string
-  menuUrl: string
-  cuisine: CuisineType
+  address?: string
+  menu_url?: string
+  cuisine?: CuisineType
   tags: string[]
+  google_maps_embed?: string
+  reservation?: Reservation
+  parking_available: boolean
+  dog_friendly: boolean
   created_at: Date
   updated_at: Date
   visits?: Visit[]
@@ -28,4 +32,10 @@ export enum CuisineType {
   Thai = 'thai',
   Korean = 'korean',
   Other = 'other',
+}
+
+export enum Reservation {
+  Required = 'required',
+  NotPossible = 'not_possible',
+  Optional = 'optional',
 }

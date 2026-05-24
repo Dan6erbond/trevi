@@ -1,3 +1,4 @@
+import { CuisineType, Reservation } from '#/lib/types/restaurant'
 import {
   Dialog,
   DialogContent,
@@ -12,9 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select'
+import { ToggleGroup, ToggleGroupItem } from '#/components/ui/toggle-group'
 
 import { Button } from '@/components/ui/button'
-import { CuisineType } from '#/lib/types/restaurant'
+import { Checkbox } from '#/components/ui/checkbox'
 import { Errors } from '#/components/ui/errors'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -74,7 +76,7 @@ export default function RestaurantDialog({
             )}
           </form.Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             {/* Cuisine Field */}
             <form.Field name="cuisine">
               {(field) => (
@@ -100,16 +102,72 @@ export default function RestaurantDialog({
               )}
             </form.Field>
 
-            {/* Location Field */}
+            <form.Field name="dogFriendly">
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>Dog Friendly</Label>
+                  <Checkbox
+                    id={field.name}
+                    checked={field.state.value}
+                    onCheckedChange={(checked) => field.handleChange(!!checked)}
+                  />
+                  <Errors errors={field.state.meta.errors} />
+                </div>
+              )}
+            </form.Field>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
             <form.Field name="location">
               {(field) => (
                 <div className="space-y-1.5">
-                  <Label htmlFor={field.name}>Location / Neighborhood</Label>
+                  <Label htmlFor={field.name}>Location</Label>
                   <Input
                     id={field.name}
                     value={field.state.value || ''}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="e.g., Zurich, Downtown"
+                  />
+                  <Errors errors={field.state.meta.errors} />
+                </div>
+              )}
+            </form.Field>
+
+            <form.Field name="googleMapsEmbed">
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>Google Maps Embed</Label>
+                  <Input
+                    id={field.name}
+                    value={field.state.value || ''}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => {
+                      let input = e.target.value
+                      let url = ''
+
+                      if (
+                        /<iframe src="([a-zA-Z0-9:\\/\\?!\\.=%&#;]*)"/.test(
+                          input,
+                        )
+                      ) {
+                        const doc = new DOMParser().parseFromString(
+                          input,
+                          'text/html',
+                        )
+                        input = doc.querySelector('iframe')?.src ?? input
+                        console.log(input)
+                      }
+
+                      try {
+                        const urlObj = new URL(input)
+                        url = urlObj.toString()
+                      } catch {}
+
+                      if (url) {
+                        field.handleChange(url)
+                      }
+                    }}
                     placeholder="e.g., Zurich, Downtown"
                   />
                   <Errors errors={field.state.meta.errors} />
@@ -135,6 +193,45 @@ export default function RestaurantDialog({
               </div>
             )}
           </form.Field>
+
+          <div className="flex flex-col md:flex-row gap-4">
+            <form.Field name="reservation">
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>Reservation</Label>
+                  <ToggleGroup
+                    value={field.state.value}
+                    onValueChange={(v) =>
+                      v && field.handleChange(v as Reservation)
+                    }
+                    type="single"
+                    variant="outline"
+                  >
+                    {Object.entries(Reservation).map(([label, value]) => (
+                      <ToggleGroupItem value={value} key={value}>
+                        {label}
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                  <Errors errors={field.state.meta.errors} />
+                </div>
+              )}
+            </form.Field>
+
+            <form.Field name="parkingAvailable">
+              {(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name}>Parking Available</Label>
+                  <Checkbox
+                    id={field.name}
+                    checked={field.state.value}
+                    onCheckedChange={(checked) => field.handleChange(!!checked)}
+                  />
+                  <Errors errors={field.state.meta.errors} />
+                </div>
+              )}
+            </form.Field>
+          </div>
 
           {/* Tags Field */}
           <form.Field name="tags">

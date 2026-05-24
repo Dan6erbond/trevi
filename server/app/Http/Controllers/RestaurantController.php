@@ -63,9 +63,13 @@ class RestaurantController extends Controller
             'team_id' => $team->id,
             'name' => $request['name'],
             'address' => $request['address'],
-            'menuUrl' => $request['menuUrl'],
+            'menu_url' => $request['menuUrl'],
             'cuisine' => $request['cuisine'],
-            'tags' => $request['tags'],
+            'tags' => $request['tags'] ?? [],
+            'google_maps_embed' => $request['googleMapsEmbed'],
+            'reservation' => $request['reservation'],
+            'parking_available' => $request['parkingAvailable'],
+            'dog_friendly' => $request['dogFriendly'],
         ]);
 
         return $restaurant;
@@ -93,12 +97,18 @@ class RestaurantController extends Controller
      */
     public function update(UpdateRestaurantRequest $request, Team $team, Restaurant $restaurant)
     {
+        logger()->info('RestaurantController.update', ['request' => $request]);
+
         $restaurant->update([
             'name' => $request['name'],
             'address' => $request['address'],
-            'menuUrl' => $request['menuUrl'],
+            'menu_url' => $request['menuUrl'],
             'cuisine' => $request['cuisine'],
-            'tags' => $request['tags'],
+            'tags' => $request['tags'] ?? [],
+            'google_maps_embed' => $request['googleMapsEmbed'],
+            'reservation' => $request['reservation'],
+            'parking_available' => $request['parkingAvailable'],
+            'dog_friendly' => $request['dogFriendly'],
         ]);
 
         return $restaurant;

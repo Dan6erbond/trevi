@@ -242,7 +242,7 @@ export function RestaurantsTable() {
                   }
                   setTags={column.setFilterValue}
                   allTags={tags.map((t) => ({ label: t, value: t }))}
-                  placeholder='Filter by Tags'
+                  placeholder="Filter by Tags"
                 />
               </CollapsibleContent>
             </Collapsible>
@@ -272,7 +272,7 @@ export function RestaurantsTable() {
           </div>
         ),
         cell: ({ row }) => {
-          const url = row.original.menuUrl
+          const url = row.original.menu_url
           if (!url)
             return <span className="text-xs text-muted-foreground">—</span>
           return (

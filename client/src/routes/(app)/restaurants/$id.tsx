@@ -20,12 +20,15 @@ import {
 } from '#/components/ui/popover'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import {
+  CalendarCheck,
   CalendarIcon,
   ChevronDown,
+  Dog,
   DollarSign,
   Edit,
   ExternalLink,
   MapPin,
+  ParkingCircle,
   Star,
   Tag,
   Utensils,
@@ -142,8 +145,11 @@ function RouteComponent() {
     ...restaurantFormOpts,
     defaultValues: {
       ...restaurant,
-      menuLink: restaurant?.menuUrl,
+      menuLink: restaurant?.menu_url,
       location: restaurant?.address,
+      dogFriendly: restaurant?.dog_friendly,
+      parkingAvailable: restaurant?.parking_available,
+      googleMapsEmbed: restaurant?.google_maps_embed,
     } as RestaurantFormValues,
     onSubmit: async ({ value }) => {
       await editRestaurant.mutateAsync(value)
@@ -243,16 +249,41 @@ function RouteComponent() {
     <div className="mx-auto max-w-5xl space-y-6 p-6 text-foreground">
       {/* Header Section */}
       <div className="flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-center">
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-3xl font-bold tracking-tight text-card-foreground">
               {restaurant.name}
             </h1>
-            <Badge variant="secondary" className="capitalize">
-              <Utensils className="mr-1 h-3 w-3" />
-              {restaurant.cuisine}
-            </Badge>
+
+            {restaurant.cuisine && (
+              <Badge variant="secondary" className="capitalize">
+                <Utensils className="mr-1 h-3 w-3" />
+                {restaurant.cuisine}
+              </Badge>
+            )}
+
+            {restaurant.reservation && (
+              <Badge variant="outline" className="capitalize">
+                <CalendarCheck />
+                {restaurant.reservation.replaceAll('_', ' ')}
+              </Badge>
+            )}
+
+            {restaurant.parking_available && (
+              <Badge variant="outline">
+                <ParkingCircle />
+                Parking Available
+              </Badge>
+            )}
+
+            {restaurant.dog_friendly && (
+              <Badge variant="outline">
+                <Dog />
+                Dog Friendly
+              </Badge>
+            )}
           </div>
+
           <div className="flex items-center gap-1 text-muted-foreground">
             <MapPin className="h-4 w-4 shrink-0" />
             <span className="text-sm">{restaurant.address}</span>
@@ -260,10 +291,10 @@ function RouteComponent() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {restaurant.menuUrl && (
+          {restaurant.menu_url && (
             <Button variant="outline" asChild size="sm">
               <a
-                href={restaurant.menuUrl}
+                href={restaurant.menu_url}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -272,9 +303,11 @@ function RouteComponent() {
               </a>
             </Button>
           )}
+
           <Button size="icon-sm" onClick={() => setIsEditOpen(true)}>
             <Edit />
           </Button>
+
           <Button
             size="sm"
             variant="secondary"
@@ -406,25 +439,24 @@ function RouteComponent() {
 
         {/* Right Column: Mini Map View Placeholder */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold tracking-tight">Location</h2>
-          <Card className="overflow-hidden">
-            <div className="flex h-48 w-full items-center justify-center bg-muted text-muted-foreground">
-              {/* Map implementation goes here later */}
-              <div className="text-center space-y-1 p-4">
-                <MapPin className="mx-auto h-8 w-8 text-muted-foreground/60" />
-                <p className="text-xs font-medium">Map View Box</p>
-                <p className="text-[11px] text-muted-foreground max-w-50">
-                  {restaurant.address}
-                </p>
-              </div>
-            </div>
-            <CardHeader className="p-4">
-              <CardDescription>
-                Clicking here can launch a native Apple/Google Maps direction
-                link in the future.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          {restaurant.google_maps_embed && (
+            <>
+              <h2 className="text-xl font-semibold tracking-tight">Location</h2>
+              <Card className="overflow-hidden">
+                <div className="flex h-48 w-full items-center justify-center bg-muted text-muted-foreground">
+                  <iframe
+                    src={restaurant.google_maps_embed}
+                    loading="lazy"
+                    className="h-full w-full"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+                <CardHeader>
+                  <CardDescription>{restaurant.address}</CardDescription>
+                </CardHeader>
+              </Card>
+            </>
+          )}
         </div>
       </div>
 

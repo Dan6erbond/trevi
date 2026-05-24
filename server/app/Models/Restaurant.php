@@ -11,12 +11,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property int $team_id
  * @property string $name
- * @property string $address
- * @property string $menuUrl
- * @property \App\Models\Cuisine $cuisine
+ * @property string|null $address
+ * @property string|null $menu_url
+ * @property \App\Models\Cuisine|null $cuisine
  * @property array<array-key, mixed> $tags
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property string|null $google_maps_embed
+ * @property string|null $reservation
+ * @property bool $parking_available
+ * @property bool $dog_friendly
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Review> $reviews
  * @property-read int|null $reviews_count
  * @property-read \App\Models\Team|null $team
@@ -28,15 +32,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Restaurant whereAddress($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Restaurant whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Restaurant whereCuisine($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Restaurant whereDogFriendly($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Restaurant whereGoogleMapsEmbed($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Restaurant whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Restaurant whereMenuUrl($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Restaurant whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Restaurant whereParkingAvailable($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Restaurant whereReservation($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Restaurant whereTags($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Restaurant whereTeamId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Restaurant whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-#[Fillable(['name', 'address', 'tags', 'menuUrl', 'cuisine', 'team_id'])]
+#[Fillable(['name', 'address', 'tags', 'dog_friendly', 'parking_available', 'google_maps_embed', 'reservation', 'menu_url', 'cuisine', 'team_id'])]
 class Restaurant extends Model
 {
     protected function casts(): array
