@@ -20,14 +20,14 @@ jobs:
       - name: Build and push PHP FPM image
         uses: docker/build-push-action@v7
         with:
-          context: "{{defaultContext}}:server"
-          file: "{context}/docker/common/php-fpm/Dockerfile"
+          context: "./server"
+          file: "docker/common/php-fpm/Dockerfile"
           push: true
           tags: ghcr.io/dan6erbond/trevi-php-fpm:latest
       - name: Build and push Nginx image
         uses: docker/build-push-action@v7
         with:
-          context: "{{defaultContext}}:server"
-          file: "{context}/docker/production/nginx/Dockerfile"
+          context: "./server"
+          file: "docker/production/nginx/Dockerfile"
           push: true
           tags: ghcr.io/dan6erbond/trevi-nginx:latest
