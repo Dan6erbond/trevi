@@ -57,7 +57,7 @@ export default function RestaurantDialog({
             e.stopPropagation()
             form.handleSubmit()
           }}
-          className="space-y-4"
+          className="space-y-4 max-h-[calc(100vh-200px)] sm:max-h-full overflow-y-auto"
         >
           {/* Restaurant Name Field */}
           <form.Field name="name">

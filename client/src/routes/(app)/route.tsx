@@ -21,7 +21,7 @@ export default function AppLayout() {
         </div>
 
         {/* page content */}
-        <div className="p-8 relative">
+        <div className="p-2 sm:p-8 relative">
           <Outlet />
         </div>
       </main>
