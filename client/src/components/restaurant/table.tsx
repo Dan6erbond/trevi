@@ -187,9 +187,14 @@ export function RestaurantsTable() {
             </Collapsible>
           </div>
         ),
-        cell: ({ cell }) => (
+        cell: ({ cell, row: { original: restaurant } }) => (
           <div className="font-semibold text-foreground">
-            {cell.getValue<string>()}
+            <Link
+              to="/restaurants/$id"
+              params={{ id: restaurant.id.toString() }}
+            >
+              {cell.getValue<string>()}
+            </Link>
           </div>
         ),
       },
