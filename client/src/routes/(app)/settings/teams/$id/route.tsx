@@ -33,7 +33,9 @@ function RouteComponent() {
           <SidebarTrigger />
         </div>
 
-        <Outlet />
+        <div className="p-4 sm:p-0">
+          <Outlet />
+        </div>
       </div>
     </SidebarProvider>
   )
