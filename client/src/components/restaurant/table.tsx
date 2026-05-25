@@ -28,14 +28,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu'
+import { Field, FieldLabel } from '#/components/ui/field'
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
 } from '#/components/ui/input-group'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '#/components/ui/pagination'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -61,7 +72,7 @@ import { Badge } from '#/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CuisineType } from '#/lib/types/restaurant'
 import type { Tag as ITag } from '#/components/ui/tag-input'
-import { Link } from '@tanstack/react-router'
+import type { PaginatedResponse } from '#/lib/types/pagination'
 import type { Restaurant } from '#/lib/types/restaurant'
 import { Spinner } from '#/components/ui/spinner'
 import { TagInput } from '#/components/ui/tag-input'
@@ -70,7 +81,12 @@ import { env } from '#/env'
 import { restaurantTagsQuery } from '#/lib/queries/restaurant'
 import { useTeamContext } from '#/contexts/team'
 
+const emptyArray: Restaurant[] = []
+
 export function RestaurantsTable() {
+  const navigate = useNavigate()
+  const { page = 1, pageSize = 25 } = useSearch({ from: '/(app)/dashboard' })
+
   const queryClient = useQueryClient()
 
   const { activeTeam } = useTeamContext()
@@ -78,13 +94,12 @@ export function RestaurantsTable() {
   const [filters, setFilters] = useState<ColumnFiltersState>([])
 
   const queryKey = useMemo(
-    () => ['restaurants', activeTeam?.id, filters],
-    [activeTeam?.id, filters],
+    () => ['restaurants', activeTeam?.id, { filters, pageSize, page }] as const,
+    [activeTeam?.id, filters, pageSize, page],
   )
 
-  const { data } = useQuery<Restaurant[]>({
+  const { data } = useQuery<PaginatedResponse<Restaurant>>({
     queryKey,
-    initialData: [],
     queryFn: async () => {
       const sp = new URLSearchParams('include=team')
 
@@ -109,11 +124,14 @@ export function RestaurantsTable() {
         )
       }
 
+      sp.append('page[size]', pageSize.toString())
+      sp.append('page[number]', page.toString())
+
       const res = await axios.get(
         `${env.VITE_SERVER_URL}/api/teams/${activeTeam!.id}/restaurants?${sp.toString()}`,
       )
 
-      return res.data.data
+      return res.data
     },
     enabled: activeTeam != null,
   })
@@ -356,13 +374,17 @@ export function RestaurantsTable() {
   )
 
   const table = useReactTable({
-    data,
+    data: data?.data ?? emptyArray,
     columns,
     getCoreRowModel: getCoreRowModel(),
     state: { columnFilters: filters },
     onColumnFiltersChange: setFilters,
     manualFiltering: true,
   })
+
+  const current = data?.current_page ?? 1
+  const last = data?.last_page ?? 1
+  const pages = Array.from({ length: last }, (_, i) => i + 1)
 
   return (
     <div className="space-y-6">
@@ -416,6 +438,70 @@ export function RestaurantsTable() {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <Field orientation="horizontal" className="w-fit">
+          <FieldLabel htmlFor="select-rows-per-page">Rows per page</FieldLabel>
+          <Select
+            defaultValue={pageSize.toString()}
+            onValueChange={(pageSize) =>
+              navigate({
+                to: '/dashboard',
+                search: { pageSize: parseInt(pageSize) },
+              })
+            }
+          >
+            <SelectTrigger className="w-20" id="select-rows-per-page">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="start">
+              <SelectGroup>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </Field>
+
+        <Pagination className="ml-auto mx-0 w-auto">
+          <PaginationContent>
+            {data?.prev_page_url && (
+              <PaginationItem>
+                <PaginationPrevious
+                  to="/dashboard"
+                  search={{ page: page - 1 }}
+                />
+              </PaginationItem>
+            )}
+
+            <PaginationItem className="sm:hidden">
+              <span className="px-3 text-sm text-muted-foreground">
+                {current} / {last}
+              </span>
+            </PaginationItem>
+
+            {pages.map((p) => (
+              <PaginationItem key={p} className="hidden sm:block">
+                <PaginationLink
+                  to="/dashboard"
+                  search={{ page: p }}
+                  isActive={p === current}
+                >
+                  {p}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            {data?.next_page_url && (
+              <PaginationItem>
+                <PaginationNext to="/dashboard" search={{ page: page + 1 }} />
+              </PaginationItem>
+            )}
+          </PaginationContent>
+        </Pagination>
       </div>
 
       {/* Reusable programmatic Dialog for tracking removal confirmations */}

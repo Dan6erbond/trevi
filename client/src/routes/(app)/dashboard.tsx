@@ -12,9 +12,14 @@ import { restaurantFormOpts } from '#/lib/forms/restaurant'
 import { useAppForm } from '#/lib/forms/app'
 import { useState } from 'react'
 import { useTeamContext } from '#/contexts/team'
+import z from 'zod'
 
 export const Route = createFileRoute('/(app)/dashboard')({
   component: RouteComponent,
+  validateSearch: z.object({
+    page: z.number().optional(),
+    pageSize: z.number().optional(),
+  }),
 })
 
 function RouteComponent() {

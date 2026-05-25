@@ -246,7 +246,7 @@ function RouteComponent() {
       : '—'
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6 text-foreground">
+    <div className="container mx-auto space-y-6 text-foreground">
       {/* Header Section */}
       <div className="flex flex-col justify-between gap-4 border-b border-border pb-6 sm:flex-row sm:items-center">
         <div className="space-y-3">
