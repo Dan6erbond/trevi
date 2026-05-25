@@ -36,6 +36,10 @@
           "cmd": "cd server && php artisan ide-helper:models -RW"
         }
       ]
-    }
+    },
+    "conventionalCommits.scopes": [
+      "client",
+      "server"
+    ]
   },
 }
