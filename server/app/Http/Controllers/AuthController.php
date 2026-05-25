@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Team;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -53,6 +54,10 @@ class AuthController extends Controller
         Auth::login($user);
 
         $request->session()->regenerate();
+
+        $user->teams()->attach(Team::create([
+            'name' => "{$request['name']}'s Team",
+        ]), ['is_admin' => true]);
 
         return response()->json([
             'user' => Auth::user(),
