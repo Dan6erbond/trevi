@@ -23,3 +23,6 @@ jobs:
           context: "{{defaultContext}}:client"
           push: true
           tags: ghcr.io/dan6erbond/trevi-client:latest
+    permissions:
+      contents: read
+      packages: write

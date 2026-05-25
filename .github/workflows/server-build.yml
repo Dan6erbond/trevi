@@ -31,3 +31,6 @@ jobs:
           file: "docker/production/nginx/Dockerfile"
           push: true
           tags: ghcr.io/dan6erbond/trevi-nginx:latest
+    permissions:
+      contents: read
+      packages: write
