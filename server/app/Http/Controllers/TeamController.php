@@ -14,7 +14,7 @@ class TeamController extends Controller
      */
     public function index()
     {
-        return Auth::user()->teams()->get();
+        return Auth::user()->teams()->withPivot('is_admin')->get();
     }
 
     /**

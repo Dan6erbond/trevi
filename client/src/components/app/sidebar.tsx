@@ -15,11 +15,9 @@ import {
 import {
   LayoutDashboard,
   LogOut,
-  MapPin,
   MoreVertical,
   Plus,
   Settings,
-  Sparkles,
   User,
   Users,
   Utensils,
@@ -111,15 +109,17 @@ export function AppSidebar() {
                       onClick={() => setActiveTeam(team)}
                     >
                       {team.name}
-                      <Button size="icon-xs" variant="ghost" asChild>
-                        <Link
-                          to="/settings/teams/$id"
-                          params={{ id: team.id.toString() }}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Settings />
-                        </Link>
-                      </Button>
+                      {team.pivot.is_admin && (
+                        <Button size="icon-xs" variant="ghost" asChild>
+                          <Link
+                            to="/settings/teams/$id"
+                            params={{ id: team.id.toString() }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Settings />
+                          </Link>
+                        </Button>
+                      )}
                     </DropdownMenuItem>
                   ))}
 

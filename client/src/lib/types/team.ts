@@ -11,6 +11,7 @@ export interface Team {
 export interface Pivot {
   user_id: number
   team_id: number
+  is_admin: boolean
 }
 
 export interface TeamInvite {
