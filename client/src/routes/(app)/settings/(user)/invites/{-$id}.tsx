@@ -30,7 +30,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 import { useEffect, useMemo, useState } from 'react'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { Button } from '#/components/ui/button'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -39,6 +39,8 @@ import type { TeamInvite } from '#/lib/types/team'
 import axios from 'axios'
 import { env } from '#/env'
 import { format } from 'date-fns'
+import { teamsQuery } from '#/lib/queries/team'
+import { useTeamContext } from '#/contexts/team'
 
 export const Route = createFileRoute('/(app)/settings/(user)/invites/{-$id}')({
   component: RouteComponent,
@@ -47,6 +49,10 @@ export const Route = createFileRoute('/(app)/settings/(user)/invites/{-$id}')({
 function RouteComponent() {
   const { id } = Route.useParams()
   const navigate = useNavigate()
+
+  const queryClient = useQueryClient()
+
+  const { setActiveTeam } = useTeamContext()
 
   const {
     data: invites,
@@ -85,14 +91,14 @@ function RouteComponent() {
       return res.data
     },
     onSuccess: () => {
-      refetchInvites()
-      setIsAcceptingInvite(null)
-      if (id) {
-        navigate({
-          to: '/settings/invites/{-$id}',
-          params: { id: undefined },
-        })
+      queryClient.refetchQueries({ queryKey: ['team-invites'] })
+      queryClient.refetchQueries({ queryKey: teamsQuery().queryKey })
+      if (isAcceptingInvite?.team) {
+        setActiveTeam(isAcceptingInvite.team)
       }
+      navigate({
+        to: '/dashboard',
+      })
     },
   })
 
