@@ -388,9 +388,12 @@ export function RestaurantsTable() {
 
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-        <Table className="min-w-full">
-          <TableHeader className="bg-muted/40">
+      <div className="-mx-8 sm:mx-0 sm:rounded-lg border border-border bg-card shadow-sm">
+        <Table
+          className="min-w-full"
+          containerClassName="overflow-y-auto max-h-[calc(100vh-75px)]"
+        >
+          <TableHeader className="sticky top-0 bg-muted">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => (
