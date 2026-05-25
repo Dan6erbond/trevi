@@ -440,7 +440,7 @@ export function RestaurantsTable() {
         </Table>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4">
         <Field orientation="horizontal" className="w-fit">
           <FieldLabel htmlFor="select-rows-per-page">Rows per page</FieldLabel>
           <Select
