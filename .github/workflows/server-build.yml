@@ -10,8 +10,9 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v4
         with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
@@ -22,11 +23,11 @@ jobs:
           context: "{{defaultContext}}:server"
           file: "{context}/docker/common/php-fpm/Dockerfile"
           push: true
-          tags: dan6erbond/trevi-php-fpm:latest
+          tags: ghcr.io/dan6erbond/trevi-php-fpm:latest
       - name: Build and push Nginx image
         uses: docker/build-push-action@v7
         with:
           context: "{{defaultContext}}:server"
           file: "{context}/docker/production/nginx/Dockerfile"
           push: true
-          tags: dan6erbond/trevi-nginx:latest
+          tags: ghcr.io/dan6erbond/trevi-nginx:latest
