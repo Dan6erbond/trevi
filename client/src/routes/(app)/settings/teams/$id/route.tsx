@@ -29,13 +29,11 @@ function RouteComponent() {
 
       {/* Main Settings Content */}
       <div className="flex-1 min-w-0 space-y-4">
-        <div className="h-14 border-b flex items-center px-4">
+        <div className="h-14 border-b flex items-center">
           <SidebarTrigger />
         </div>
 
-        <div className="p-4 sm:p-0">
-          <Outlet />
-        </div>
+        <Outlet />
       </div>
     </SidebarProvider>
   )

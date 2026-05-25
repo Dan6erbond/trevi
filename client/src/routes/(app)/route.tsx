@@ -21,7 +21,7 @@ export default function AppLayout() {
         </div>
 
         {/* page content */}
-        <div className="p-2 sm:p-8 relative">
+        <div className="px-8 sm:px-12 py-4 sm:py-8 relative">
           <Outlet />
         </div>
       </main>
