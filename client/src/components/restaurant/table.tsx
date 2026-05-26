@@ -85,7 +85,7 @@ const emptyArray: Restaurant[] = []
 
 export function RestaurantsTable() {
   const navigate = useNavigate()
-  const { page = 1, pageSize = 25 } = useSearch({ from: '/(app)/dashboard' })
+  const { page, pageSize } = useSearch({ from: '/(app)/dashboard' })
 
   const queryClient = useQueryClient()
 
@@ -383,7 +383,10 @@ export function RestaurantsTable() {
     columns,
     getCoreRowModel: getCoreRowModel(),
     state: { columnFilters: filters },
-    onColumnFiltersChange: setFilters,
+    onColumnFiltersChange: (filters) => {
+      setFilters(filters)
+      navigate({ to: '/dashboard', search: { pageSize } })
+    },
     manualFiltering: true,
   })
 

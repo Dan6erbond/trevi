@@ -17,8 +17,8 @@ import z from 'zod'
 export const Route = createFileRoute('/(app)/dashboard')({
   component: RouteComponent,
   validateSearch: z.object({
-    page: z.number().optional(),
-    pageSize: z.number().optional(),
+    page: z.number().optional().default(1),
+    pageSize: z.number().optional().default(25),
   }),
 })
 
