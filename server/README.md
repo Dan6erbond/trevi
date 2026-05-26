@@ -1,58 +1,129 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Trevi Server
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+The backend API for Trevi, built with **Laravel** and designed to serve as a RESTful resource for the frontend. Follows Laravel conventions with a focus on clean, maintainable code and robust authorization.
 
-## About Laravel
+## 🛠️ Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| Area           | Technologies                        |
+| -------------- | ----------------------------------- |
+| Framework      | Laravel                             |
+| Query Building | Spatie Laravel Query Builder        |
+| API Pagination | JSON API Pagination Plugin          |
+| Database       | PostgreSQL                          |
+| Authentication | Laravel Sanctum (cookie-based)      |
+| Authorization  | Laravel Policies                    |
+| Docker         | Multi-stage builds (PHP-FPM, Nginx) |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📂 Project Structure
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```text
+app/
+├── Models/          # Eloquent models (e.g., Restaurant, Visit)
+│   ├── Enums/       # Enums for types (Reservation, Cuisine, etc.)
+│   └── ...
+├── Http/
+│   ├── Controllers/ # API controllers (follows apiResource conventions)
+│   └── ...
+├── Policies/        # Authorization policies (e.g., RestaurantPolicy)
+├── ...
+docker/
+├── common/
+│   └── php-fpm/
+│       ├── Dockerfile
+│       └── conf.d/
+│           └── 20-status-path.conf
+└── production/
+    └── nginx/
+        ├── Dockerfile
+        └── nginx.conf
+.env.example         # Environment template
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## 🏗️ Architecture
 
-## Contributing
+### Routing & Controllers
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- Uses Laravel’s `apiResource` conventions for standard CRUD operations (`index`, `store`, `show`, `update`, `destroy`).
+- Leverages **`scopeBindings()`** in `web.php` to automatically resolve parent models (e.g., `Team $team` in controller methods).
 
-## Code of Conduct
+### Query Building
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- **Spatie Laravel Query Builder** enables dynamic filtering, sorting, and includes via query parameters:
+    - `?include=team`
+    - `?fields[restaurants]=name,cuisine`
+    - `?filter[name]=...`
+    - `?page[size]=20&page[number]=1`
+- Example from `RestaurantController@index`:
+    ```php
+    QueryBuilder::for(
+        $team->restaurants()
+            ->withMax('visits', 'visited_at')
+            ->withAvg('visits', 'cost')
+            ->withAvg('visits', 'party_size')
+    )
+        ->allowedIncludes('team')
+        ->allowedFilters('name', 'cuisine', ...)
+        ->jsonPaginate();
+    ```
 
-## Security Vulnerabilities
+### Authorization
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- **Policies** (e.g., `RestaurantPolicy`) define authorization logic.
+- Routes use middleware for authorization:
+    ```php
+    Route::get('', [TeamController::class, 'show'])
+        ->middleware('can:view,team');
+    ```
 
-## License
+## 🐳 Docker
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Development
+
+A [`docker-compose.yml`](../docker-compose.yml) file is included in the workspace root for local development with PostgreSQL.
+
+Run with:
+
+```bash
+docker compose up -d
+```
+
+### Production
+
+- **PHP-FPM**: `docker/common/php-fpm/Dockerfile`
+- **Nginx**: `docker/production/nginx/Dockerfile`
+- Configuration files:
+    - `nginx/nginx.conf`
+    - `php-fpm/conf.d/20-status-path.conf`
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Docker & Docker Compose
+- PHP 8.2+
+- Composer
+
+### Setup
+
+1. Copy the environment file:
+    ```bash
+    cp .env.example .env
+    ```
+2. Configure your PostgreSQL connection in `.env` (or use the default `docker-compose.yml` settings).
+3. Install dependencies:
+    ```bash
+    composer install
+    ```
+4. Generate the app key:
+    ```bash
+    php artisan key:generate
+    ```
+5. Run migrations:
+    ```bash
+    php artisan migrate
+    ```
+6. Start the development server:
+    ```bash
+    php artisan serve
+    ```
+    The API will be available at `http://localhost:8000`.
