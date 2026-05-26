@@ -73,7 +73,7 @@ export function TagInput<T>({
     return () => {
       document.removeEventListener('click', handleClick)
     }
-  }, [])
+  }, [container, setOpen])
 
   const handleBackSpace = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Backspace' && inputValue === '') {
@@ -123,13 +123,18 @@ export function TagInput<T>({
   )
 
   return (
-    <div className={(cn('space-y-2'), className)} ref={container} {...props}>
+    <div
+      className={cn('space-y-2 relative', className)}
+      ref={container}
+      {...props}
+    >
       <Command className={cn('rounded', className)}>
         <div
           className={cn(
             'flex w-full items-center flex-wrap gap-2 border rounded-md p-2 hover:cursor-text ',
           )}
           onClick={() => commandInput.current?.focus()}
+          onFocus={() => setOpen(true)}
         >
           {tags.map((tag) => (
             <Pill
@@ -139,7 +144,7 @@ export function TagInput<T>({
             />
           ))}
 
-          <div className="flex flex-grow items-center justify-end">
+          <div className="flex grow items-center justify-end">
             <div className="flex-1 min-w-0">
               <CommandInput
                 placeholder={placeholder}
@@ -151,14 +156,14 @@ export function TagInput<T>({
               />
             </div>
             <X
-              className="w-4 h-4 flex-shrink-0 cursor-pointer hover:text-red-700 transition-colors ml-2"
+              className="w-4 h-4 shrink-0 cursor-pointer hover:text-red-700 transition-colors ml-2"
               onClick={handleClear}
             />
           </div>
         </div>
 
         {open && (
-          <div className="w-full">
+          <div className="w-full absolute top-12">
             <CommandList
               className={cn(
                 'hide-scrollbar bg-primary-foreground w-full rounded-md',
