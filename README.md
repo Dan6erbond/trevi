@@ -58,7 +58,9 @@ All Docker images are automatically built and published to **GitHub Container Re
 - **[trevi-nginx](https://github.com/Dan6erbond/trevi/pkgs/container/trevi-nginx)** – Nginx web server
 - **[trevi-client](https://github.com/Dan6erbond/trevi/pkgs/container/trevi-client)** – React frontend
 
-### <details><summary>🐳 Docker Compose</summary>
+<details>
+
+<summary>### 🐳 Docker Compose</summary>
 
 ```yaml
 version: '3.8'
@@ -112,7 +114,9 @@ volumes:
 
 </details>
 
-### <details><summary>⚙️ Kubernetes</summary>
+<details>
+
+<summary>### ⚙️ Kubernetes</summary>
 
 ```yaml
 ---
