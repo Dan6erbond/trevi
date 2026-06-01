@@ -60,7 +60,7 @@ All Docker images are automatically built and published to **GitHub Container Re
 
 <details>
 
-<summary>### 🐳 Docker Compose</summary>
+### <summary>🐳 Docker Compose</summary>
 
 ```yaml
 version: '3.8'
@@ -116,7 +116,7 @@ volumes:
 
 <details>
 
-<summary>### ⚙️ Kubernetes</summary>
+### <summary>⚙️ Kubernetes</summary>
 
 ```yaml
 ---
